@@ -1,0 +1,38 @@
+{
+  "name": "claude-code-configuration",
+  "version": "1.0.0",
+  "description": "Comprehensive Claude Code configuration for Node.js/Express/React/MUI full-stack development with best practices, security patterns, and automated documentation",
+  "keywords": [
+    "claude-code",
+    "nodejs",
+    "express",
+    "react",
+    "material-ui",
+    "mui",
+    "configuration",
+    "best-practices",
+    "coding-standards",
+    "git-hooks",
+    "documentation",
+    "security",
+    "testing"
+  ],
+  "author": "Claude Code Configuration Contributors",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/servika/claude-code-setup.git"
+  },
+  "bugs": {
+    "url": "https://github.com/servika/claude-code-setup/issues"
+  },
+  "homepage": "https://github.com/servika/claude-code-setup#readme",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"This is a configuration repository - no tests to run\" && exit 0"
+  },
+  "private": false,
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}

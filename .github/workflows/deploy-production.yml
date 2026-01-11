@@ -1,0 +1,149 @@
+name: Deploy to Production
+
+on:
+  push:
+    tags:
+      - 'v*.*.*' # Trigger on version tags (e.g., v1.0.0)
+  workflow_dispatch: # Allow manual trigger
+
+jobs:
+  deploy:
+    name: Deploy to Production
+    runs-on: ubuntu-latest
+    environment:
+      name: production
+      url: https://yourdomain.com
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run tests
+        run: npm test
+        env:
+          NODE_ENV: test
+
+      - name: Build project
+        run: npm run build
+        env:
+          NODE_ENV: production
+
+      - name: Create deployment archive
+        run: |
+          tar -czf release.tar.gz dist/ package.json package-lock.json
+          echo "RELEASE_VERSION=${GITHUB_REF#refs/tags/}" >> $GITHUB_ENV
+
+      - name: Upload release artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: production-release-${{ env.RELEASE_VERSION }}
+          path: release.tar.gz
+          retention-days: 30
+
+      - name: Deploy to Production Server (Blue-Green)
+        uses: easingthemes/ssh-deploy@v4
+        with:
+          SSH_PRIVATE_KEY: ${{ secrets.PRODUCTION_SSH_PRIVATE_KEY }}
+          REMOTE_HOST: ${{ secrets.PRODUCTION_HOST }}
+          REMOTE_USER: ${{ secrets.PRODUCTION_USER }}
+          SOURCE: "release.tar.gz"
+          TARGET: "/var/www/releases"
+          SCRIPT_BEFORE: |
+            # Determine which slot is active (blue or green)
+            ACTIVE_SLOT=$(readlink /var/www/production-current)
+            if [ "$ACTIVE_SLOT" == "/var/www/production-blue" ]; then
+              INACTIVE_SLOT="green"
+            else
+              INACTIVE_SLOT="blue"
+            fi
+            echo "Active: $ACTIVE_SLOT, Deploying to: $INACTIVE_SLOT"
+            echo "INACTIVE_SLOT=$INACTIVE_SLOT" >> /tmp/deploy.env
+          SCRIPT_AFTER: |
+            # Extract deployment environment
+            source /tmp/deploy.env
+
+            # Extract release to inactive slot
+            cd /var/www/releases
+            tar -xzf release.tar.gz -C /var/www/production-$INACTIVE_SLOT
+
+            # Install production dependencies
+            cd /var/www/production-$INACTIVE_SLOT
+            npm ci --production
+
+            # Start application in inactive slot (different port)
+            if [ "$INACTIVE_SLOT" == "blue" ]; then
+              PORT=3001 pm2 start dist/server.js --name production-blue
+            else
+              PORT=3002 pm2 start dist/server.js --name production-green
+            fi
+
+            # Wait for app to start
+            sleep 5
+
+            # Health check on inactive slot
+            if [ "$INACTIVE_SLOT" == "blue" ]; then
+              curl -f http://localhost:3001/health || exit 1
+            else
+              curl -f http://localhost:3002/health || exit 1
+            fi
+
+            # Switch nginx to point to new slot
+            sudo ln -sfn /var/www/production-$INACTIVE_SLOT /var/www/production-current
+            sudo nginx -s reload
+
+            # Stop old slot
+            if [ "$INACTIVE_SLOT" == "blue" ]; then
+              pm2 stop production-green || true
+            else
+              pm2 stop production-blue || true
+            fi
+
+            pm2 save
+
+      - name: Run smoke tests
+        run: |
+          sleep 10
+          curl -f https://yourdomain.com/health || exit 1
+          curl -f https://yourdomain.com/api/health || exit 1
+
+      - name: Create GitHub Release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ github.ref }}
+          release_name: Release ${{ github.ref }}
+          body: |
+            Production deployment of ${{ github.ref }}
+
+            ## Changes
+            See commit history for details.
+
+            ## Deployment
+            - Deployed using blue-green strategy
+            - Zero-downtime deployment
+            - Smoke tests passed
+          draft: false
+          prerelease: false
+
+      - name: Notify deployment success
+        if: success()
+        run: |
+          echo "Production deployment successful!"
+          # Add notification to Slack/Discord/etc here
+
+      - name: Rollback on failure
+        if: failure()
+        run: |
+          echo "Production deployment failed! Rolling back..."
+          # SSH into server and switch back to previous slot
+          # Add notification to Slack/Discord/etc here

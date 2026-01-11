@@ -1,0 +1,211 @@
+name: Bug Report
+description: Report a bug or unexpected behavior in the application
+title: "[Bug]: "
+labels: ["bug", "needs-triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ## Before You Submit
+
+        - Check if this bug has already been reported in [existing issues](../../issues)
+        - Make sure you're using the latest version
+        - Verify the issue is reproducible
+
+        **Please follow our guidelines**: See `.claude/rules/quality-management.md` for incident reporting standards.
+
+  - type: checkboxes
+    id: preflight
+    attributes:
+      label: Preflight Checklist
+      description: Please confirm the following before submitting
+      options:
+        - label: I have searched for existing issues and this is not a duplicate
+          required: true
+        - label: I am reporting a single bug, not multiple issues
+          required: true
+        - label: I can reproduce this issue consistently
+          required: true
+
+  - type: dropdown
+    id: severity
+    attributes:
+      label: Severity
+      description: How severe is this issue? (See `.claude/rules/quality-management.md` for severity definitions)
+      options:
+        - P0 - Critical (Production down, data loss, security breach)
+        - P1 - High (Major feature broken, significant user impact)
+        - P2 - Medium (Feature partially broken, workaround exists)
+        - P3 - Low (Minor issue, cosmetic bug)
+    validations:
+      required: true
+
+  - type: dropdown
+    id: component
+    attributes:
+      label: Component
+      description: Which part of the application is affected?
+      options:
+        - Frontend (React/MUI)
+        - Backend API (Express)
+        - Database
+        - Authentication/Authorization
+        - Build/Deploy
+        - Testing
+        - Documentation
+        - Other
+    validations:
+      required: true
+
+  - type: textarea
+    id: description
+    attributes:
+      label: Bug Description
+      description: Clear description of what's wrong
+      placeholder: "Example: Login fails with 'Invalid credentials' even when credentials are correct"
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected Behavior
+      description: What should happen instead?
+      placeholder: "Example: User should be logged in successfully with valid credentials"
+    validations:
+      required: true
+
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual Behavior
+      description: What actually happens?
+      placeholder: "Example: Login request returns 401 Unauthorized with message 'Invalid credentials'"
+    validations:
+      required: true
+
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Steps to Reproduce
+      description: Provide clear, numbered steps to reproduce the issue
+      placeholder: |
+        1. Navigate to /login
+        2. Enter email: user@example.com
+        3. Enter password: correct_password
+        4. Click "Sign In" button
+        5. Observe error message
+    validations:
+      required: true
+
+  - type: textarea
+    id: error-logs
+    attributes:
+      label: Error Messages / Logs
+      description: Include any error messages, stack traces, or console output
+      render: shell
+      placeholder: |
+        Error: Invalid credentials
+        at validateUser (src/services/auth.service.js:45)
+        at POST /api/auth/login (src/routes/auth.routes.js:23)
+
+  - type: dropdown
+    id: environment
+    attributes:
+      label: Environment
+      description: Where does this occur?
+      options:
+        - Production
+        - Staging
+        - Development (Local)
+        - Testing
+    validations:
+      required: true
+
+  - type: input
+    id: version
+    attributes:
+      label: Version
+      description: Application version or commit hash
+      placeholder: "v1.2.3 or commit abc1234"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: browser
+    attributes:
+      label: Browser (if frontend issue)
+      description: Which browser exhibits the issue?
+      options:
+        - Chrome
+        - Firefox
+        - Safari
+        - Edge
+        - Mobile Safari
+        - Mobile Chrome
+        - Other
+        - Not applicable
+
+  - type: input
+    id: node-version
+    attributes:
+      label: Node.js Version (if backend issue)
+      description: Output of `node --version`
+      placeholder: "v20.10.0"
+
+  - type: dropdown
+    id: regression
+    attributes:
+      label: Is this a regression?
+      description: Did this work in a previous version?
+      options:
+        - "Yes - This worked before"
+        - "No - Never worked"
+        - "Unknown"
+    validations:
+      required: true
+
+  - type: input
+    id: last-working
+    attributes:
+      label: Last Known Working Version
+      description: If regression, what was the last version that worked?
+      placeholder: "v1.2.0"
+
+  - type: textarea
+    id: context
+    attributes:
+      label: Additional Context
+      description: |
+        Add any other context, screenshots, or relevant information
+        - Screenshots or screen recordings
+        - Network requests/responses (from DevTools)
+        - Related configuration files
+        - Database state
+        - Related issues or PRs
+      placeholder: |
+        - Screenshot showing the error in the UI
+        - Network tab showing 401 response from /api/auth/login
+        - User record in database shows correct password hash
+
+  - type: textarea
+    id: workaround
+    attributes:
+      label: Temporary Workaround
+      description: Is there a workaround or temporary solution?
+      placeholder: "Users can reset their password to regain access"
+
+  - type: markdown
+    attributes:
+      value: |
+        ---
+
+        ## What Happens Next?
+
+        1. This issue will be triaged based on severity (P0-P3)
+        2. Critical issues (P0/P1) will be addressed immediately
+        3. Investigation will follow root cause analysis methodology (see `.claude/rules/quality-management.md`)
+        4. Fix will include tests and documentation updates
+        5. Post-incident review for P0/P1 issues
+
+        Thank you for helping improve our application!
