@@ -1,0 +1,104 @@
+{
+  "$schema": "https://raw.githubusercontent.com/anthropics/claude-code/main/schemas/settings.schema.json",
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Edit|Write",
+        "command": "echo 'Reminder: Ensure JSDoc comments and proper error handling'"
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write",
+        "command": "if [[ \"$CLAUDE_TOOL_ARG_FILE_PATH\" == *.js || \"$CLAUDE_TOOL_ARG_FILE_PATH\" == *.jsx ]]; then echo 'Remember to run linter and tests'; fi"
+      }
+    ],
+    "Stop": [
+      {
+        "command": "echo 'Session ended. Verify: JSDoc comments, test coverage (≥60%), no console.log in production code'"
+      }
+    ]
+  },
+  "permissions": {
+    "allow": [
+      "Bash(npm run lint)",
+      "Bash(npm run test*)",
+      "Bash(npm run build)",
+      "Bash(npm install*)",
+      "Bash(git status)",
+      "Bash(git diff*)",
+      "Bash(git log*)",
+      "Bash(git add*)",
+      "Bash(git commit*)",
+      "Bash(ls*)",
+      "Bash(cat package.json)",
+      "Read",
+      "Write",
+      "Edit",
+      "Glob",
+      "Grep"
+    ],
+    "deny": [
+      "Bash(rm -rf /)",
+      "Bash(rm -rf ~)",
+      "Bash(*--force*)",
+      "Bash(git push --force*)",
+      "Bash(*password*)",
+      "Bash(*secret*)",
+      "Bash(*token*)"
+    ]
+  },
+  "preferences": {
+    "autoCompact": true,
+    "compactThreshold": 80,
+    "codeStyle": {
+      "singleQuotes": true,
+      "semicolons": true,
+      "trailingCommas": "es5",
+      "tabWidth": 2
+    }
+  },
+  "agents": {
+    "frontend": {
+      "description": "React + MUI frontend development",
+      "context": [
+        ".claude/rules/frontend.md",
+        ".claude/rules/testing.md",
+        ".claude/rules/security.md"
+      ],
+      "tools": ["Read", "Write", "Edit", "Glob", "Grep", "Bash"]
+    },
+    "backend": {
+      "description": "Node.js + Express backend development",
+      "context": [
+        ".claude/rules/backend.md",
+        ".claude/rules/testing.md",
+        ".claude/rules/security.md"
+      ],
+      "tools": ["Read", "Write", "Edit", "Glob", "Grep", "Bash"]
+    },
+    "documentation": {
+      "description": "Technical documentation writer",
+      "context": [
+        ".claude/rules/documentation.md"
+      ],
+      "tools": ["Read", "Write", "Edit", "Glob", "Grep"]
+    },
+    "testing": {
+      "description": "Unit and integration test writer",
+      "context": [
+        ".claude/rules/testing.md",
+        ".claude/rules/frontend.md",
+        ".claude/rules/backend.md"
+      ],
+      "tools": ["Read", "Write", "Edit", "Glob", "Grep", "Bash"]
+    },
+    "security": {
+      "description": "Security review and implementation",
+      "context": [
+        ".claude/rules/security.md"
+      ],
+      "tools": ["Read", "Glob", "Grep"]
+    }
+  }
+}

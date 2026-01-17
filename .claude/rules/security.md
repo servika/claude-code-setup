@@ -1,365 +1,312 @@
----
-pattern: "**/*.{js,ts,jsx,tsx}"
----
-
 # Security Best Practices
 
-These security guidelines apply to all code in the project, with special attention to backend APIs and user input handling.
+## OWASP Top 10 Prevention
 
-## Input Validation
+| Vulnerability | Prevention |
+|--------------|------------|
+| Injection | Parameterized queries, input validation |
+| Broken Auth | Secure password hashing, JWT best practices |
+| Sensitive Data Exposure | HTTPS, encryption at rest, no secrets in code |
+| XXE | Disable XML external entities |
+| Broken Access Control | Middleware authorization, ownership checks |
+| Security Misconfiguration | Helmet, secure defaults, env validation |
+| XSS | React auto-escaping, sanitize user HTML |
+| Insecure Deserialization | Validate and sanitize all input |
+| Vulnerable Components | Regular `npm audit`, dependabot |
+| Insufficient Logging | Structured logging, no sensitive data in logs |
 
-**Always Validate User Input**
-- Never trust client-side data
-- Validate at API boundaries (route entry points)
-- Use validation libraries (Zod, Joi, express-validator)
-- Whitelist allowed values, don't blacklist
+## Input Validation (Zod)
 
 ```javascript
 import { z } from 'zod';
 
-// Good: Schema validation
+// Define strict schemas
 const userSchema = z.object({
-  email: z.string().email().max(255),
-  password: z.string().min(8).max(128),
-  age: z.number().int().min(13).max(120),
-  role: z.enum(['user', 'admin', 'moderator'])
+  email: z.string()
+    .email('Invalid email format')
+    .max(255, 'Email too long')
+    .toLowerCase(),
+  password: z.string()
+    .min(8, 'Password must be at least 8 characters')
+    .max(128, 'Password too long')
+    .regex(/[A-Z]/, 'Password must contain uppercase letter')
+    .regex(/[0-9]/, 'Password must contain number'),
+  name: z.string()
+    .min(2, 'Name too short')
+    .max(100, 'Name too long')
+    .trim(),
+  role: z.enum(['user', 'admin']).default('user'),
 });
 
-router.post('/users', async (req, res) => {
-  try {
-    const validatedData = userSchema.parse(req.body);
-    const user = await createUser(validatedData);
-    res.status(201).json(user);
-  } catch (error) {
-    res.status(400).json({ error: error.message });
-  }
-});
-
-// Bad: No validation
-router.post('/users', async (req, res) => {
-  const user = await createUser(req.body); // ❌ Trusting client data
-  res.json(user);
-});
-```
-
-**Sanitize Input**
-
-```javascript
-import validator from 'validator';
-import mongoSanitize from 'express-mongo-sanitize';
-import xss from 'xss-clean';
-
-// Middleware to prevent NoSQL injection and XSS
-app.use(express.json());
-app.use(mongoSanitize());
-app.use(xss());
-
-// Manual sanitization
-function sanitizeEmail(email) {
-  return validator.normalizeEmail(email);
+// Validate at API boundary
+export function validate(schema) {
+  return (req, res, next) => {
+    const result = schema.safeParse(req.body);
+    if (!result.success) {
+      throw new ValidationError('Validation failed', result.error.flatten());
+    }
+    req.body = result.data; // Use parsed data (transformed/sanitized)
+    next();
+  };
 }
 
-function sanitizeString(str) {
-  return validator.escape(str.trim());
-}
+// ID validation
+const idSchema = z.string().uuid('Invalid ID format');
+
+// Query params validation
+const paginationSchema = z.object({
+  page: z.coerce.number().int().min(1).default(1),
+  limit: z.coerce.number().int().min(1).max(100).default(20),
+  search: z.string().max(100).optional(),
+});
 ```
 
 ## SQL Injection Prevention
 
-**Use Parameterized Queries**
-
 ```javascript
-// Bad: String concatenation (SQL injection vulnerable)
-const query = `SELECT * FROM users WHERE email = '${email}'`; // ❌
-db.query(query);
+// NEVER - String concatenation
+const query = `SELECT * FROM users WHERE email = '${email}'`;
 
-// Good: Parameterized queries
-const query = 'SELECT * FROM users WHERE email = ?';
-db.query(query, [email]);
+// NEVER - Template literals with user input
+const query = `SELECT * FROM users WHERE id = ${id}`;
 
-// Good: With pg (PostgreSQL)
+// GOOD - Parameterized queries (node-postgres)
 const query = 'SELECT * FROM users WHERE email = $1';
-await pool.query(query, [email]);
+const result = await pool.query(query, [email]);
 
-// Good: ORM with parameterization
-const user = await User.findOne({ where: { email } });
+// GOOD - Parameterized queries (mysql2)
+const query = 'SELECT * FROM users WHERE email = ?';
+const [rows] = await connection.execute(query, [email]);
+
+// GOOD - ORM (Prisma)
+const user = await prisma.user.findUnique({
+  where: { email },
+});
+
+// GOOD - ORM (Sequelize)
+const user = await User.findOne({
+  where: { email },
+});
+
+// GOOD - Query builder (Knex)
+const user = await knex('users').where({ email }).first();
 ```
 
-## NoSQL Injection Prevention
-
-**Validate MongoDB Queries**
-
-```javascript
-// Bad: Direct use of user input
-const user = await User.findOne({ email: req.body.email }); // ❌
-
-// Vulnerable to: { "email": { "$ne": null } }
-
-// Good: Validate and sanitize
-const email = z.string().email().parse(req.body.email);
-const user = await User.findOne({ email });
-
-// Use express-mongo-sanitize middleware
-import mongoSanitize from 'express-mongo-sanitize';
-app.use(mongoSanitize()); // Removes $ and . from user input
-```
-
-## Cross-Site Scripting (XSS) Prevention
-
-**Escape Output**
-
-```javascript
-// React automatically escapes content
-function UserProfile({ user }) {
-  // Safe: React escapes by default
-  return <div>{user.name}</div>;
-
-  // Dangerous: dangerouslySetInnerHTML bypasses escaping
-  return <div dangerouslySetInnerHTML={{ __html: user.bio }} />; // ❌
-
-  // If you must use HTML, sanitize first
-  import DOMPurify from 'dompurify';
-  const sanitized = DOMPurify.sanitize(user.bio);
-  return <div dangerouslySetInnerHTML={{ __html: sanitized }} />; // ✓
-}
-```
-
-**Content Security Policy**
-
-```javascript
-import helmet from 'helmet';
-
-app.use(helmet.contentSecurityPolicy({
-  directives: {
-    defaultSrc: ["'self'"],
-    scriptSrc: ["'self'", "'unsafe-inline'"], // Avoid 'unsafe-inline' in production
-    styleSrc: ["'self'", "'unsafe-inline'"],
-    imgSrc: ["'self'", "data:", "https:"],
-    connectSrc: ["'self'", "https://api.example.com"],
-    fontSrc: ["'self'"],
-    objectSrc: ["'none'"],
-    upgradeInsecureRequests: [],
-  }
-}));
-```
-
-## Authentication & Authorization
-
-**Hash Passwords**
+## Password Security
 
 ```javascript
 import bcrypt from 'bcrypt';
 
-// Good: Hash passwords before storing
-async function createUser(userData) {
-  const saltRounds = 12;
-  const hashedPassword = await bcrypt.hash(userData.password, saltRounds);
+const SALT_ROUNDS = 12; // Minimum 10, recommended 12+
 
-  return await db.users.create({
-    ...userData,
-    password: hashedPassword
+/**
+ * Hashes a password securely
+ * @param {string} password - Plain text password
+ * @returns {Promise<string>} Hashed password
+ */
+export async function hashPassword(password) {
+  return bcrypt.hash(password, SALT_ROUNDS);
+}
+
+/**
+ * Verifies password against hash
+ * @param {string} password - Plain text password
+ * @param {string} hash - Stored hash
+ * @returns {Promise<boolean>} True if matches
+ */
+export async function verifyPassword(password, hash) {
+  return bcrypt.compare(password, hash);
+}
+
+// Usage in registration
+async function registerUser(data) {
+  const hashedPassword = await hashPassword(data.password);
+  const user = await User.create({
+    ...data,
+    password: hashedPassword,
   });
+
+  // Never return password
+  const { password, ...userWithoutPassword } = user.toObject();
+  return userWithoutPassword;
 }
 
-// Verify password
-async function verifyPassword(plainPassword, hashedPassword) {
-  return await bcrypt.compare(plainPassword, hashedPassword);
-}
+// Usage in login
+async function login(email, password) {
+  const user = await User.findOne({ email });
 
-// Bad: Storing plain text passwords
-async function createUser(userData) {
-  return await db.users.create(userData); // ❌ Password in plain text
+  if (!user) {
+    // Use same response to prevent user enumeration
+    throw new UnauthorizedError('Invalid credentials');
+  }
+
+  const valid = await verifyPassword(password, user.password);
+
+  if (!valid) {
+    throw new UnauthorizedError('Invalid credentials');
+  }
+
+  return generateToken(user);
 }
 ```
 
-**Secure JWT Implementation**
+## JWT Security
 
 ```javascript
 import jwt from 'jsonwebtoken';
 
-// Good: Secure JWT configuration
-const JWT_SECRET = process.env.JWT_SECRET; // Strong, random secret
-const JWT_EXPIRES_IN = '1h'; // Short expiration
-const REFRESH_TOKEN_EXPIRES_IN = '7d';
-
-if (!JWT_SECRET || JWT_SECRET.length < 32) {
+// Environment validation
+if (!process.env.JWT_SECRET || process.env.JWT_SECRET.length < 32) {
   throw new Error('JWT_SECRET must be at least 32 characters');
 }
 
-function generateAccessToken(user) {
+const JWT_CONFIG = {
+  accessToken: {
+    expiresIn: '15m',  // Short-lived
+    algorithm: 'HS256',
+  },
+  refreshToken: {
+    expiresIn: '7d',
+    algorithm: 'HS256',
+  },
+};
+
+/**
+ * Generates access token
+ * @param {Object} user - User object
+ * @returns {string} JWT token
+ */
+export function generateAccessToken(user) {
   return jwt.sign(
-    { id: user.id, email: user.email, role: user.role },
-    JWT_SECRET,
-    { expiresIn: JWT_EXPIRES_IN, algorithm: 'HS256' }
+    {
+      id: user.id,
+      email: user.email,
+      role: user.role,
+    },
+    process.env.JWT_SECRET,
+    JWT_CONFIG.accessToken
   );
 }
 
-function generateRefreshToken(user) {
+/**
+ * Generates refresh token
+ * @param {Object} user - User object
+ * @returns {string} JWT token
+ */
+export function generateRefreshToken(user) {
   return jwt.sign(
     { id: user.id },
-    process.env.REFRESH_TOKEN_SECRET,
-    { expiresIn: REFRESH_TOKEN_EXPIRES_IN }
+    process.env.JWT_REFRESH_SECRET,
+    JWT_CONFIG.refreshToken
   );
 }
 
-// Verify token
-function verifyToken(token) {
+/**
+ * Verifies and decodes token
+ * @param {string} token - JWT token
+ * @returns {Object} Decoded payload
+ * @throws {UnauthorizedError} On invalid token
+ */
+export function verifyToken(token) {
   try {
-    return jwt.verify(token, JWT_SECRET, { algorithms: ['HS256'] });
+    return jwt.verify(token, process.env.JWT_SECRET);
   } catch (error) {
+    if (error.name === 'TokenExpiredError') {
+      throw new UnauthorizedError('Token expired');
+    }
     throw new UnauthorizedError('Invalid token');
   }
 }
-
-// Bad: Weak configuration
-const token = jwt.sign({ id: user.id }, 'secret123'); // ❌ Weak secret, no expiration
 ```
 
-**Authorization Checks**
+## Authentication Middleware
 
 ```javascript
-// Good: Check authorization at every protected route
-router.delete('/users/:id', authenticate, async (req, res) => {
-  const requestedUserId = req.params.id;
-  const currentUserId = req.user.id;
-  const currentUserRole = req.user.role;
+/**
+ * Authenticates requests via JWT
+ */
+export function authenticate(req, res, next) {
+  const authHeader = req.headers.authorization;
 
-  // Users can only delete their own account, admins can delete any
-  if (requestedUserId !== currentUserId && currentUserRole !== 'admin') {
-    throw new ForbiddenError('Not authorized to delete this user');
+  if (!authHeader?.startsWith('Bearer ')) {
+    throw new UnauthorizedError('No token provided');
   }
 
-  await deleteUser(requestedUserId);
-  res.status(204).send();
-});
-
-// Bad: No authorization check
-router.delete('/users/:id', authenticate, async (req, res) => {
-  await deleteUser(req.params.id); // ❌ Any authenticated user can delete any user
-  res.status(204).send();
-});
-```
-
-## Secrets Management
-
-**Environment Variables**
-
-```javascript
-// Good: Use environment variables for secrets
-import dotenv from 'dotenv';
-dotenv.config();
-
-const config = {
-  dbUrl: process.env.DATABASE_URL,
-  jwtSecret: process.env.JWT_SECRET,
-  apiKey: process.env.API_KEY,
-};
-
-// Validate required secrets at startup
-const requiredEnvVars = ['DATABASE_URL', 'JWT_SECRET', 'API_KEY'];
-const missingVars = requiredEnvVars.filter(key => !process.env[key]);
-
-if (missingVars.length > 0) {
-  throw new Error(`Missing required environment variables: ${missingVars.join(', ')}`);
+  const token = authHeader.slice(7);
+  req.user = verifyToken(token);
+  next();
 }
 
-// Bad: Hardcoded secrets
-const config = {
-  dbUrl: 'postgresql://user:password@localhost:5432/db', // ❌
-  jwtSecret: 'my-secret-key', // ❌
-  apiKey: 'sk-1234567890' // ❌
-};
-```
-
-**.env File Management**
-
-```bash
-# .env (never commit this file!)
-DATABASE_URL=postgresql://user:password@localhost:5432/db
-JWT_SECRET=your-super-secret-key-min-32-chars
-API_KEY=your-api-key
-
-# .env.example (commit this as a template)
-DATABASE_URL=
-JWT_SECRET=
-API_KEY=
-```
-
-```gitignore
-# .gitignore
-.env
-.env.local
-.env.*.local
-```
-
-**Redact Secrets from Logs**
-
-```javascript
-function sanitizeForLogging(obj) {
-  const sensitiveKeys = ['password', 'token', 'secret', 'apiKey', 'authorization'];
-
-  return Object.fromEntries(
-    Object.entries(obj).map(([key, value]) => {
-      if (sensitiveKeys.some(k => key.toLowerCase().includes(k))) {
-        return [key, '[REDACTED]'];
-      }
-      return [key, value];
-    })
-  );
+/**
+ * Authorizes specific roles
+ * @param {...string} roles - Allowed roles
+ */
+export function authorize(...roles) {
+  return (req, res, next) => {
+    if (!req.user) {
+      throw new UnauthorizedError('Not authenticated');
+    }
+    if (!roles.includes(req.user.role)) {
+      throw new ForbiddenError('Insufficient permissions');
+    }
+    next();
+  };
 }
 
-// Usage
-logger.info('User created', sanitizeForLogging(userData));
+/**
+ * Checks resource ownership
+ * @param {Function} getOwnerId - Function to get owner ID from request
+ */
+export function requireOwnership(getOwnerId) {
+  return async (req, res, next) => {
+    const ownerId = await getOwnerId(req);
+    if (ownerId !== req.user.id && req.user.role !== 'admin') {
+      throw new ForbiddenError('Not authorized to access this resource');
+    }
+    next();
+  };
+}
 ```
 
-## Rate Limiting
-
-**Prevent Brute Force Attacks**
+## Security Headers (Helmet)
 
 ```javascript
-import rateLimit from 'express-rate-limit';
+import helmet from 'helmet';
 
-// General API rate limiter
-const apiLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 100, // Max 100 requests per window
-  message: 'Too many requests, please try again later',
-  standardHeaders: true,
-  legacyHeaders: false,
-});
+app.use(helmet());
 
-// Strict rate limit for auth endpoints
-const authLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000,
-  max: 5, // Max 5 login attempts
-  skipSuccessfulRequests: true, // Don't count successful logins
-  message: 'Too many login attempts, please try again later'
-});
+// Custom CSP for React apps
+app.use(helmet.contentSecurityPolicy({
+  directives: {
+    defaultSrc: ["'self'"],
+    scriptSrc: ["'self'"],
+    styleSrc: ["'self'", "'unsafe-inline'"], // MUI needs inline styles
+    imgSrc: ["'self'", "data:", "https:"],
+    connectSrc: ["'self'", process.env.API_URL],
+    fontSrc: ["'self'", "https://fonts.gstatic.com"],
+    objectSrc: ["'none'"],
+    upgradeInsecureRequests: [],
+  },
+}));
 
-app.use('/api', apiLimiter);
-app.use('/api/auth/login', authLimiter);
-app.use('/api/auth/register', authLimiter);
+// Additional headers
+app.use(helmet.hsts({
+  maxAge: 31536000,
+  includeSubDomains: true,
+  preload: true,
+}));
 ```
 
 ## CORS Configuration
 
-**Configure CORS Properly**
-
 ```javascript
 import cors from 'cors';
 
-// Bad: Allow all origins
-app.use(cors()); // ❌
+const corsOptions = {
+  origin: (origin, callback) => {
+    const allowedOrigins = process.env.ALLOWED_ORIGINS?.split(',') || [];
 
-// Good: Whitelist specific origins
-const allowedOrigins = process.env.ALLOWED_ORIGINS?.split(',') || [
-  'http://localhost:3000',
-  'https://yourdomain.com'
-];
-
-app.use(cors({
-  origin: function (origin, callback) {
-    // Allow requests with no origin (mobile apps, Postman, etc.)
+    // Allow requests with no origin (mobile apps, curl, etc.)
     if (!origin) return callback(null, true);
 
     if (allowedOrigins.includes(origin)) {
@@ -368,223 +315,262 @@ app.use(cors({
       callback(new Error('Not allowed by CORS'));
     }
   },
-  credentials: true, // Allow cookies
-  methods: ['GET', 'POST', 'PUT', 'DELETE'],
-  allowedHeaders: ['Content-Type', 'Authorization']
-}));
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+  maxAge: 86400, // 24 hours
+};
+
+app.use(cors(corsOptions));
 ```
 
-## Security Headers
-
-**Use Helmet for Security Headers**
+## Rate Limiting
 
 ```javascript
-import helmet from 'helmet';
+import rateLimit from 'express-rate-limit';
 
-app.use(helmet()); // Applies sensible defaults
+// General API rate limit
+const apiLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 100,
+  message: { error: 'Too many requests, please try again later' },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
 
-// Or configure individually
-app.use(helmet.contentSecurityPolicy({
-  directives: {
-    defaultSrc: ["'self'"],
-    styleSrc: ["'self'", "'unsafe-inline'"]
+// Strict limit for auth endpoints
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 5,
+  skipSuccessfulRequests: true, // Only count failures
+  message: { error: 'Too many login attempts, please try again later' },
+});
+
+// Password reset limit
+const resetLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000, // 1 hour
+  max: 3,
+  message: { error: 'Too many reset attempts' },
+});
+
+app.use('/api', apiLimiter);
+app.use('/api/auth/login', authLimiter);
+app.use('/api/auth/register', authLimiter);
+app.use('/api/auth/reset-password', resetLimiter);
+```
+
+## Cookie Security
+
+```javascript
+// Secure cookie settings
+const cookieOptions = {
+  httpOnly: true,      // Prevents JavaScript access
+  secure: true,        // HTTPS only (set false in development)
+  sameSite: 'strict',  // CSRF protection
+  maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+  path: '/',
+};
+
+// Set refresh token in cookie
+res.cookie('refreshToken', refreshToken, cookieOptions);
+
+// Clear cookie on logout
+res.clearCookie('refreshToken', {
+  httpOnly: true,
+  secure: true,
+  sameSite: 'strict',
+});
+```
+
+## Secrets Management
+
+```javascript
+// config/index.js
+
+// Required environment variables
+const requiredEnvVars = [
+  'DATABASE_URL',
+  'JWT_SECRET',
+  'JWT_REFRESH_SECRET',
+];
+
+// Validate at startup
+export function validateEnv() {
+  const missing = requiredEnvVars.filter(key => !process.env[key]);
+  if (missing.length) {
+    throw new Error(`Missing required env vars: ${missing.join(', ')}`);
   }
-}));
-app.use(helmet.hsts({ maxAge: 31536000, includeSubDomains: true }));
-app.use(helmet.noSniff());
-app.use(helmet.xssFilter());
-app.use(helmet.frameguard({ action: 'deny' }));
+
+  if (process.env.JWT_SECRET.length < 32) {
+    throw new Error('JWT_SECRET must be at least 32 characters');
+  }
+}
+
+// .gitignore
+// .env
+// .env.local
+// .env.*.local
+// *.pem
+// *.key
+```
+
+## Logging (No Sensitive Data)
+
+```javascript
+/**
+ * Sanitizes object for logging
+ * @param {Object} obj - Object to sanitize
+ * @returns {Object} Sanitized object
+ */
+function sanitize(obj) {
+  if (!obj || typeof obj !== 'object') return obj;
+
+  const sensitiveFields = [
+    'password',
+    'token',
+    'secret',
+    'authorization',
+    'cookie',
+    'creditCard',
+    'ssn',
+  ];
+
+  const sanitized = { ...obj };
+
+  for (const field of sensitiveFields) {
+    if (field in sanitized) {
+      sanitized[field] = '[REDACTED]';
+    }
+  }
+
+  return sanitized;
+}
+
+// Usage
+logger.info('User created', sanitize(userData));
+logger.error('Login failed', { email: user.email }); // No password
+```
+
+## XSS Prevention (React)
+
+```javascript
+// React escapes by default - SAFE
+<div>{user.name}</div>
+<input value={searchQuery} />
+
+// DANGEROUS - Only use with sanitized content
+import DOMPurify from 'dompurify';
+
+function RichContent({ html }) {
+  const sanitizedHtml = DOMPurify.sanitize(html, {
+    ALLOWED_TAGS: ['p', 'br', 'strong', 'em', 'a'],
+    ALLOWED_ATTR: ['href'],
+  });
+
+  return <div dangerouslySetInnerHTML={{ __html: sanitizedHtml }} />;
+}
+
+// NEVER trust user input in URLs
+// Bad
+<a href={userProvidedUrl}>Link</a>
+
+// Good
+function SafeLink({ url, children }) {
+  const isValid = url.startsWith('https://') || url.startsWith('/');
+  if (!isValid) return <span>{children}</span>;
+  return <a href={url}>{children}</a>;
+}
 ```
 
 ## File Upload Security
-
-**Validate File Uploads**
 
 ```javascript
 import multer from 'multer';
 import path from 'path';
 
-const storage = multer.diskStorage({
-  destination: 'uploads/',
-  filename: (req, file, cb) => {
-    // Generate unique filename
-    const uniqueSuffix = `${Date.now()}-${Math.round(Math.random() * 1E9)}`;
-    cb(null, `${file.fieldname}-${uniqueSuffix}${path.extname(file.originalname)}`);
-  }
-});
-
-const fileFilter = (req, file, cb) => {
-  // Whitelist allowed file types
-  const allowedTypes = /jpeg|jpg|png|pdf/;
-  const extname = allowedTypes.test(path.extname(file.originalname).toLowerCase());
-  const mimetype = allowedTypes.test(file.mimetype);
-
-  if (extname && mimetype) {
-    cb(null, true);
-  } else {
-    cb(new Error('Invalid file type. Only JPEG, PNG, and PDF are allowed.'));
-  }
-};
+const ALLOWED_TYPES = /jpeg|jpg|png|gif|pdf/;
+const MAX_SIZE = 5 * 1024 * 1024; // 5MB
 
 const upload = multer({
-  storage,
-  fileFilter,
+  storage: multer.diskStorage({
+    destination: './uploads',
+    filename: (req, file, cb) => {
+      // Generate unique filename
+      const uniqueName = `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+      const ext = path.extname(file.originalname).toLowerCase();
+      cb(null, `${uniqueName}${ext}`);
+    },
+  }),
   limits: {
-    fileSize: 5 * 1024 * 1024, // 5MB max
-    files: 1 // Max 1 file per request
-  }
-});
-
-// Use in route
-router.post('/upload', authenticate, upload.single('file'), (req, res) => {
-  if (!req.file) {
-    return res.status(400).json({ error: 'No file uploaded' });
-  }
-
-  // Don't expose server file paths to client
-  res.json({
-    message: 'File uploaded successfully',
-    fileId: req.file.filename // Return only filename, not full path
-  });
-});
-```
-
-## Session Security
-
-**Secure Session Configuration**
-
-```javascript
-import session from 'express-session';
-
-app.use(session({
-  secret: process.env.SESSION_SECRET, // Strong, random secret
-  resave: false,
-  saveUninitialized: false,
-  cookie: {
-    secure: process.env.NODE_ENV === 'production', // HTTPS only in production
-    httpOnly: true, // Prevent JavaScript access
-    maxAge: 1000 * 60 * 60 * 24, // 24 hours
-    sameSite: 'strict' // CSRF protection
+    fileSize: MAX_SIZE,
   },
-  name: 'sessionId' // Don't use default 'connect.sid'
-}));
+  fileFilter: (req, file, cb) => {
+    const extValid = ALLOWED_TYPES.test(path.extname(file.originalname).toLowerCase());
+    const mimeValid = ALLOWED_TYPES.test(file.mimetype);
+
+    if (extValid && mimeValid) {
+      cb(null, true);
+    } else {
+      cb(new Error('Invalid file type'));
+    }
+  },
+});
 ```
 
 ## Dependency Security
 
-**Regular Security Audits**
+```bash
+# Check for vulnerabilities
+npm audit
+
+# Fix automatically where possible
+npm audit fix
+
+# Check outdated packages
+npm outdated
+
+# Update packages
+npm update
+```
 
 ```json
+// package.json - Use dependabot or renovate
 {
   "scripts": {
     "audit": "npm audit",
-    "audit:fix": "npm audit fix",
-    "audit:check": "npm audit --audit-level=moderate"
+    "audit:fix": "npm audit fix"
   }
-}
-```
-
-Run these commands regularly and in CI/CD pipelines.
-
-**Use Tools Like Snyk or Dependabot**
-- Enable Dependabot on GitHub for automatic security updates
-- Use Snyk for vulnerability scanning
-- Review dependency updates before merging
-
-## Error Handling Security
-
-**Don't Leak Information in Errors**
-
-```javascript
-// Bad: Exposing sensitive information
-app.use((err, req, res, next) => {
-  res.status(500).json({
-    error: err.message,
-    stack: err.stack, // ❌ Exposes server internals
-    query: req.query // ❌ Could contain sensitive data
-  });
-});
-
-// Good: Generic error messages in production
-app.use((err, req, res, next) => {
-  logger.error('Error occurred', {
-    error: err.message,
-    stack: err.stack,
-    url: req.originalUrl,
-    userId: req.user?.id
-  });
-
-  const isDevelopment = process.env.NODE_ENV === 'development';
-
-  res.status(err.statusCode || 500).json({
-    error: err.isOperational ? err.message : 'Internal server error',
-    ...(isDevelopment && { stack: err.stack })
-  });
-});
-```
-
-## Frontend Security
-
-**Prevent Token Exposure**
-
-```javascript
-// Bad: Storing JWT in localStorage (vulnerable to XSS)
-localStorage.setItem('token', token); // ❌
-
-// Better: HttpOnly cookie (backend sets this)
-res.cookie('token', token, {
-  httpOnly: true,
-  secure: true,
-  sameSite: 'strict',
-  maxAge: 3600000
-});
-
-// Or use secure session storage with proper CSP
-```
-
-**Validate API Responses**
-
-```javascript
-// Good: Validate data from API
-import { z } from 'zod';
-
-const userSchema = z.object({
-  id: z.string(),
-  name: z.string(),
-  email: z.string().email()
-});
-
-async function fetchUser(id) {
-  const response = await fetch(`/api/users/${id}`);
-  const data = await response.json();
-
-  // Validate response matches expected schema
-  return userSchema.parse(data);
 }
 ```
 
 ## Security Checklist
 
-Backend:
-✓ Validate all user input
-✓ Use parameterized queries (prevent SQL injection)
-✓ Hash passwords with bcrypt (12+ rounds)
-✓ Use strong JWT secrets (32+ characters)
-✓ Implement rate limiting on auth endpoints
-✓ Configure CORS properly
-✓ Use helmet for security headers
-✓ Validate file uploads (type, size)
-✓ Store secrets in environment variables
-✓ Never commit .env files
-✓ Sanitize data in logs
-✓ Run npm audit regularly
-✓ Use HTTPS in production
+### Backend
+- [ ] Input validation on all endpoints (Zod)
+- [ ] Parameterized database queries
+- [ ] Passwords hashed with bcrypt (12+ rounds)
+- [ ] JWT secret minimum 32 characters
+- [ ] Short access token expiry (15m)
+- [ ] Rate limiting on auth endpoints
+- [ ] Helmet middleware enabled
+- [ ] CORS properly configured
+- [ ] httpOnly, secure, sameSite cookies
+- [ ] No secrets in code or version control
+- [ ] Sensitive data excluded from logs
+- [ ] File uploads validated and limited
+- [ ] Regular `npm audit`
 
-Frontend:
-✓ Never store secrets in frontend code
-✓ Use HttpOnly cookies for auth tokens
-✓ Validate API responses
-✓ Sanitize user-generated HTML
-✓ Implement CSP headers
-✓ Use HTTPS
-✓ Keep dependencies updated
+### Frontend
+- [ ] No secrets in frontend code
+- [ ] User-generated HTML sanitized (DOMPurify)
+- [ ] Auth tokens in httpOnly cookies
+- [ ] API responses validated
+- [ ] Links validated before rendering
+- [ ] No eval() or innerHTML with user data
+
+### Infrastructure
+- [ ] HTTPS everywhere
+- [ ] Security headers configured
+- [ ] Environment variables for secrets
+- [ ] Database credentials secured
+- [ ] Audit logging enabled

@@ -1,216 +1,312 @@
----
-pattern: "**/*.{test,spec}.{js,ts,jsx,tsx}"
----
-
 # Testing Guidelines
 
-These rules apply to all test files in the project.
+## Testing Philosophy
 
-## Test Structure
+- **Test behavior, not implementation** - Tests should verify what code does, not how it does it
+- **Given-When-Then structure** - Clear test organization
+- **Independent tests** - Each test runs in isolation
+- **Fast feedback** - Unit tests should run in milliseconds
 
-**Use BDD-Style Organization**
-- Structure tests with Given-When-Then comments
-- One logical assertion per test
-- Descriptive test names that explain the scenario
+## Coverage Requirements
+
+| Scope | Minimum Coverage |
+|-------|------------------|
+| Overall project | 60% |
+| Per file | 20% |
+
+```javascript
+// jest.config.js
+export default {
+  coverageThreshold: {
+    global: {
+      branches: 60,
+      functions: 60,
+      lines: 60,
+      statements: 60,
+    },
+  },
+  collectCoverageFrom: [
+    'src/**/*.{js,jsx}',
+    '!src/**/*.test.{js,jsx}',
+    '!src/**/index.js',
+  ],
+};
+```
+
+## Test Structure (Given-When-Then)
 
 ```javascript
 describe('UserService', () => {
   describe('createUser', () => {
-    it('should create a user with valid data', async () => {
-      // Given
+    it('should create user with valid data', async () => {
+      // Given - Setup preconditions
       const userData = {
-        name: 'John Doe',
         email: 'john@example.com',
-        password: 'securepassword123'
+        password: 'password123',
+        name: 'John Doe',
       };
 
-      // When
+      // When - Execute the action
       const user = await userService.createUser(userData);
 
-      // Then
+      // Then - Verify results
       expect(user).toMatchObject({
+        email: 'john@example.com',
         name: 'John Doe',
-        email: 'john@example.com'
       });
       expect(user.id).toBeDefined();
-      expect(user.password).not.toBe(userData.password); // Should be hashed
+      expect(user.password).toBeUndefined(); // Password not returned
     });
 
-    it('should throw ValidationError when email is invalid', async () => {
+    it('should throw ValidationError for invalid email', async () => {
       // Given
-      const userData = {
-        name: 'John Doe',
-        email: 'invalid-email',
-        password: 'securepassword123'
-      };
+      const invalidData = { email: 'invalid', password: 'password123' };
 
-      // When / Then
-      await expect(userService.createUser(userData))
+      // When/Then
+      await expect(userService.createUser(invalidData))
         .rejects
         .toThrow(ValidationError);
     });
+
+    it('should throw ConflictError for duplicate email', async () => {
+      // Given
+      const userData = { email: 'existing@example.com', password: 'pass123' };
+      await userService.createUser(userData);
+
+      // When/Then
+      await expect(userService.createUser(userData))
+        .rejects
+        .toThrow(ConflictError);
+    });
   });
 });
 ```
 
-## Naming Conventions
+## Unit Testing
 
-**Descriptive Test Names**
+### Pure Functions
 
 ```javascript
-// Good: Clear, specific test names
-it('should return 404 when user does not exist')
-it('should hash password before storing in database')
-it('should send welcome email after successful registration')
-it('should prevent duplicate email registration')
+// utils/format.js
+export function formatCurrency(amount, currency = 'USD') {
+  return new Intl.NumberFormat('en-US', {
+    style: 'currency',
+    currency,
+  }).format(amount);
+}
 
-// Bad: Vague test names
-it('works') // ❌
-it('test user creation') // ❌
-it('should work correctly') // ❌
+// utils/format.test.js
+describe('formatCurrency', () => {
+  it('should format USD by default', () => {
+    expect(formatCurrency(1234.56)).toBe('$1,234.56');
+  });
+
+  it('should format with specified currency', () => {
+    expect(formatCurrency(1234.56, 'EUR')).toBe('€1,234.56');
+  });
+
+  it('should handle zero', () => {
+    expect(formatCurrency(0)).toBe('$0.00');
+  });
+
+  it('should handle negative numbers', () => {
+    expect(formatCurrency(-50)).toBe('-$50.00');
+  });
+});
 ```
 
-## Mocking Best Practices
-
-**Mock External Dependencies, Not the System Under Test**
+### Services with Dependencies
 
 ```javascript
-import { jest } from '@jest/globals';
-import { UserService } from '../services/user.service';
-import { emailService } from '../services/email.service';
-import { database } from '../database';
+// services/user.service.test.js
+import { userService } from './user.service.js';
+import { User } from '../models/user.model.js';
+import { NotFoundError } from '../utils/errors.js';
 
-// Mock external dependencies
-jest.mock('../services/email.service');
-jest.mock('../database');
+// Mock the model
+jest.mock('../models/user.model.js');
 
-describe('UserService.register', () => {
+describe('UserService', () => {
   beforeEach(() => {
-    // Reset mocks before each test
     jest.clearAllMocks();
   });
 
-  it('should send welcome email after registration', async () => {
-    // Given
-    const userData = { name: 'John', email: 'john@example.com' };
-    database.users.create.mockResolvedValue({ id: '1', ...userData });
+  describe('getUserById', () => {
+    it('should return user when found', async () => {
+      // Given
+      const mockUser = { id: '123', name: 'John', email: 'john@example.com' };
+      User.findById.mockResolvedValue(mockUser);
 
-    // When
-    await UserService.register(userData);
+      // When
+      const result = await userService.getUserById('123');
 
-    // Then
-    expect(emailService.sendWelcomeEmail).toHaveBeenCalledWith(
-      'john@example.com',
-      'John'
-    );
+      // Then
+      expect(result).toEqual(mockUser);
+      expect(User.findById).toHaveBeenCalledWith('123');
+    });
+
+    it('should throw NotFoundError when user not found', async () => {
+      // Given
+      User.findById.mockResolvedValue(null);
+
+      // When/Then
+      await expect(userService.getUserById('999'))
+        .rejects
+        .toThrow(NotFoundError);
+    });
   });
 });
 ```
 
-**Reset Mocks Between Tests**
+### Async Testing
 
 ```javascript
-beforeEach(() => {
-  jest.clearAllMocks(); // Clear call history
-  // Or jest.resetAllMocks(); // Also reset implementations
-  // Or jest.restoreAllMocks(); // Restore original implementations
-});
-
-afterEach(() => {
-  jest.clearAllMocks();
-});
-```
-
-## Coverage Requirements
-
-**Test the Three Paths**
-1. Happy path (successful operation)
-2. Error cases (validation failures, network errors)
-3. Edge cases (null, undefined, empty arrays, boundary values)
-
-```javascript
-describe('calculateDiscount', () => {
-  // Happy path
-  it('should calculate 10% discount for standard members', () => {
-    expect(calculateDiscount(100, 'standard')).toBe(10);
-  });
-
-  // Edge cases
-  it('should return 0 discount for zero amount', () => {
-    expect(calculateDiscount(0, 'premium')).toBe(0);
-  });
-
-  it('should handle negative amounts', () => {
-    expect(calculateDiscount(-100, 'standard')).toBe(0);
-  });
-
-  it('should return 0 for null membership', () => {
-    expect(calculateDiscount(100, null)).toBe(0);
-  });
-
-  // Error cases
-  it('should throw error for invalid membership type', () => {
-    expect(() => calculateDiscount(100, 'invalid'))
-      .toThrow('Invalid membership type');
-  });
-});
-```
-
-## Async Testing
-
-**Always Await or Return Promises**
-
-```javascript
-// Good: Using async/await
-it('should fetch user data', async () => {
-  const user = await fetchUser('123');
-  expect(user.name).toBe('John');
-});
-
-// Good: Returning promise
-it('should fetch user data', () => {
-  return fetchUser('123').then(user => {
+describe('async operations', () => {
+  // Always use async/await
+  it('should fetch user data', async () => {
+    const user = await fetchUser('123');
     expect(user.name).toBe('John');
   });
-});
 
-// Bad: Forgetting await (test passes even if promise rejects!)
-it('should fetch user data', () => {
-  fetchUser('123').then(user => { // ❌ No await or return
-    expect(user.name).toBe('John');
+  // Test rejected promises
+  it('should handle fetch errors', async () => {
+    await expect(fetchUser('invalid'))
+      .rejects
+      .toThrow('User not found');
+  });
+
+  // Test with fake timers
+  it('should debounce search', async () => {
+    jest.useFakeTimers();
+    const onSearch = jest.fn();
+
+    search('test', onSearch);
+    search('test2', onSearch);
+
+    jest.advanceTimersByTime(300);
+
+    expect(onSearch).toHaveBeenCalledTimes(1);
+    expect(onSearch).toHaveBeenCalledWith('test2');
+
+    jest.useRealTimers();
   });
 });
 ```
 
-**Test All Async States**
+## Integration Testing
+
+### API Endpoint Testing (Supertest)
 
 ```javascript
-describe('useUser hook', () => {
-  it('should show loading state initially', () => {
-    const { result } = renderHook(() => useUser('123'));
-    expect(result.current.loading).toBe(true);
-    expect(result.current.data).toBeNull();
+// routes/users.routes.test.js
+import request from 'supertest';
+import app from '../app.js';
+import { User } from '../models/user.model.js';
+import { generateToken } from '../utils/auth.js';
+
+describe('Users API', () => {
+  let authToken;
+  let testUser;
+
+  beforeAll(async () => {
+    // Create test user and get token
+    testUser = await User.create({
+      email: 'admin@test.com',
+      password: 'hashedpassword',
+      name: 'Admin',
+      role: 'admin',
+    });
+    authToken = generateToken(testUser);
   });
 
-  it('should load user data successfully', async () => {
-    const { result } = renderHook(() => useUser('123'));
+  afterAll(async () => {
+    await User.deleteMany({});
+  });
 
-    await waitFor(() => {
-      expect(result.current.loading).toBe(false);
-      expect(result.current.data).toEqual({ id: '123', name: 'John' });
-      expect(result.current.error).toBeNull();
+  describe('GET /api/users', () => {
+    it('should return paginated users list', async () => {
+      // When
+      const response = await request(app)
+        .get('/api/users')
+        .set('Authorization', `Bearer ${authToken}`)
+        .expect(200);
+
+      // Then
+      expect(response.body.success).toBe(true);
+      expect(response.body.data).toBeInstanceOf(Array);
+      expect(response.body.pagination).toMatchObject({
+        page: expect.any(Number),
+        limit: expect.any(Number),
+        total: expect.any(Number),
+      });
+    });
+
+    it('should return 401 without auth token', async () => {
+      await request(app)
+        .get('/api/users')
+        .expect(401);
     });
   });
 
-  it('should handle error state', async () => {
-    mockFetch.mockRejectedValueOnce(new Error('Network error'));
+  describe('POST /api/users', () => {
+    it('should create user with valid data', async () => {
+      // Given
+      const newUser = {
+        email: 'new@example.com',
+        password: 'password123',
+        name: 'New User',
+      };
 
-    const { result } = renderHook(() => useUser('123'));
+      // When
+      const response = await request(app)
+        .post('/api/users')
+        .set('Authorization', `Bearer ${authToken}`)
+        .send(newUser)
+        .expect(201);
 
-    await waitFor(() => {
-      expect(result.current.loading).toBe(false);
-      expect(result.current.data).toBeNull();
-      expect(result.current.error).toBe('Network error');
+      // Then
+      expect(response.body.success).toBe(true);
+      expect(response.body.data.email).toBe(newUser.email);
+      expect(response.body.data.password).toBeUndefined();
+    });
+
+    it('should return 400 for invalid email', async () => {
+      const response = await request(app)
+        .post('/api/users')
+        .set('Authorization', `Bearer ${authToken}`)
+        .send({ email: 'invalid', password: 'pass123', name: 'Test' })
+        .expect(400);
+
+      expect(response.body.success).toBe(false);
+      expect(response.body.error).toContain('Validation');
+    });
+
+    it('should return 409 for duplicate email', async () => {
+      const existingEmail = testUser.email;
+
+      await request(app)
+        .post('/api/users')
+        .set('Authorization', `Bearer ${authToken}`)
+        .send({ email: existingEmail, password: 'pass123', name: 'Test' })
+        .expect(409);
+    });
+  });
+
+  describe('GET /api/users/:id', () => {
+    it('should return user by id', async () => {
+      const response = await request(app)
+        .get(`/api/users/${testUser.id}`)
+        .set('Authorization', `Bearer ${authToken}`)
+        .expect(200);
+
+      expect(response.body.data.id).toBe(testUser.id);
+    });
+
+    it('should return 404 for non-existent user', async () => {
+      await request(app)
+        .get('/api/users/nonexistent-id')
+        .set('Authorization', `Bearer ${authToken}`)
+        .expect(404);
     });
   });
 });
@@ -218,15 +314,56 @@ describe('useUser hook', () => {
 
 ## React Component Testing
 
-**Use React Testing Library**
+### Basic Component Test
 
 ```javascript
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+// components/UserProfile.test.jsx
+import { render, screen } from '@testing-library/react';
+import { UserProfile } from './UserProfile';
+
+describe('UserProfile', () => {
+  const mockUser = {
+    id: '123',
+    name: 'John Doe',
+    email: 'john@example.com',
+  };
+
+  it('should render user name', () => {
+    render(<UserProfile user={mockUser} />);
+
+    expect(screen.getByText('John Doe')).toBeInTheDocument();
+  });
+
+  it('should render user email', () => {
+    render(<UserProfile user={mockUser} />);
+
+    expect(screen.getByText('john@example.com')).toBeInTheDocument();
+  });
+
+  it('should not render edit button when onEdit not provided', () => {
+    render(<UserProfile user={mockUser} />);
+
+    expect(screen.queryByRole('button', { name: /edit/i })).not.toBeInTheDocument();
+  });
+
+  it('should render edit button when onEdit provided', () => {
+    render(<UserProfile user={mockUser} onEdit={jest.fn()} />);
+
+    expect(screen.getByRole('button', { name: /edit/i })).toBeInTheDocument();
+  });
+});
+```
+
+### User Interaction Tests
+
+```javascript
+// components/LoginForm.test.jsx
+import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { LoginForm } from './LoginForm';
 
 describe('LoginForm', () => {
-  it('should submit form with valid credentials', async () => {
+  it('should submit form with valid data', async () => {
     // Given
     const handleSubmit = jest.fn();
     const user = userEvent.setup();
@@ -242,133 +379,75 @@ describe('LoginForm', () => {
     await waitFor(() => {
       expect(handleSubmit).toHaveBeenCalledWith({
         email: 'john@example.com',
-        password: 'password123'
+        password: 'password123',
       });
     });
   });
 
-  it('should display error message for invalid email', async () => {
+  it('should show validation error for invalid email', async () => {
     const user = userEvent.setup();
+
     render(<LoginForm onSubmit={jest.fn()} />);
 
-    await user.type(screen.getByLabelText(/email/i), 'invalid-email');
+    await user.type(screen.getByLabelText(/email/i), 'invalid');
     await user.click(screen.getByRole('button', { name: /sign in/i }));
 
-    expect(screen.getByText(/invalid email/i)).toBeInTheDocument();
-  });
-});
-```
-
-**Query by Accessibility, Not Implementation**
-
-```javascript
-// Good: Query by role, label, text
-screen.getByRole('button', { name: /submit/i });
-screen.getByLabelText(/email/i);
-screen.getByText(/welcome/i);
-screen.getByPlaceholderText(/search/i);
-
-// Bad: Query by implementation details
-screen.getByClassName('submit-button'); // ❌
-screen.getByTestId('email-input'); // ❌ Use only as last resort
-document.querySelector('.error-message'); // ❌
-```
-
-**User Interactions with userEvent**
-
-```javascript
-import userEvent from '@testing-library/user-event';
-
-it('should handle user interactions', async () => {
-  const user = userEvent.setup();
-
-  render(<SearchForm />);
-
-  // Type in input
-  await user.type(screen.getByRole('textbox'), 'React hooks');
-
-  // Click button
-  await user.click(screen.getByRole('button', { name: /search/i }));
-
-  // Select option
-  await user.selectOptions(screen.getByRole('combobox'), 'option-value');
-
-  // Check checkbox
-  await user.click(screen.getByRole('checkbox', { name: /remember me/i }));
-});
-```
-
-## API Testing
-
-**Test Express Routes with Supertest**
-
-```javascript
-import request from 'supertest';
-import { app } from '../app';
-import { database } from '../database';
-
-describe('POST /api/users', () => {
-  beforeEach(async () => {
-    await database.users.deleteAll(); // Clean database
-  });
-
-  it('should create a new user', async () => {
-    // When
-    const response = await request(app)
-      .post('/api/users')
-      .send({
-        name: 'John Doe',
-        email: 'john@example.com',
-        password: 'securepassword123'
-      })
-      .expect(201);
-
-    // Then
-    expect(response.body).toMatchObject({
-      id: expect.any(String),
-      name: 'John Doe',
-      email: 'john@example.com'
+    await waitFor(() => {
+      expect(screen.getByText(/invalid email/i)).toBeInTheDocument();
     });
-    expect(response.body.password).toBeUndefined(); // Should not return password
   });
 
-  it('should return 400 for invalid email', async () => {
-    const response = await request(app)
-      .post('/api/users')
-      .send({
-        name: 'John Doe',
-        email: 'invalid-email',
-        password: 'securepassword123'
-      })
-      .expect(400);
+  it('should disable submit button while loading', async () => {
+    const user = userEvent.setup();
+    const slowSubmit = () => new Promise(resolve => setTimeout(resolve, 1000));
 
-    expect(response.body.error).toMatch(/email/i);
-  });
+    render(<LoginForm onSubmit={slowSubmit} />);
 
-  it('should return 401 without authentication', async () => {
-    await request(app)
-      .post('/api/users')
-      .send({ name: 'John' })
-      .expect(401);
+    await user.type(screen.getByLabelText(/email/i), 'john@example.com');
+    await user.type(screen.getByLabelText(/password/i), 'password123');
+    await user.click(screen.getByRole('button', { name: /sign in/i }));
+
+    expect(screen.getByRole('button', { name: /sign in/i })).toBeDisabled();
   });
 });
 ```
 
-**Mock HTTP Requests with MSW**
+### Query Priority (Accessibility First)
 
 ```javascript
+// Best - queries accessible to everyone
+screen.getByRole('button', { name: /submit/i });
+screen.getByRole('textbox', { name: /email/i });
+screen.getByRole('checkbox', { name: /remember/i });
+
+// Good - accessible to screen readers
+screen.getByLabelText(/email address/i);
+screen.getByPlaceholderText(/search/i);
+screen.getByText(/welcome/i);
+
+// Last resort - only when nothing else works
+screen.getByTestId('custom-dropdown');
+```
+
+### Testing Async Components
+
+```javascript
+// components/UserList.test.jsx
+import { render, screen, waitFor } from '@testing-library/react';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { rest } from 'msw';
 import { setupServer } from 'msw/node';
+import { UserList } from './UserList';
 
 const server = setupServer(
-  rest.get('/api/users/:id', (req, res, ctx) => {
-    return res(
-      ctx.json({
-        id: req.params.id,
-        name: 'John Doe',
-        email: 'john@example.com'
-      })
-    );
+  rest.get('/api/users', (req, res, ctx) => {
+    return res(ctx.json({
+      success: true,
+      data: [
+        { id: '1', name: 'John', email: 'john@example.com' },
+        { id: '2', name: 'Jane', email: 'jane@example.com' },
+      ],
+    }));
   })
 );
 
@@ -376,23 +455,42 @@ beforeAll(() => server.listen());
 afterEach(() => server.resetHandlers());
 afterAll(() => server.close());
 
-describe('UserProfile', () => {
-  it('should display user data', async () => {
-    render(<UserProfile userId="123" />);
+describe('UserList', () => {
+  const queryClient = new QueryClient({
+    defaultOptions: { queries: { retry: false } },
+  });
+
+  const renderWithQuery = (ui) => {
+    return render(
+      <QueryClientProvider client={queryClient}>
+        {ui}
+      </QueryClientProvider>
+    );
+  };
+
+  it('should show loading state initially', () => {
+    renderWithQuery(<UserList />);
+
+    expect(screen.getByRole('progressbar')).toBeInTheDocument();
+  });
+
+  it('should render users after loading', async () => {
+    renderWithQuery(<UserList />);
 
     await waitFor(() => {
-      expect(screen.getByText('John Doe')).toBeInTheDocument();
+      expect(screen.getByText('John')).toBeInTheDocument();
+      expect(screen.getByText('Jane')).toBeInTheDocument();
     });
   });
 
-  it('should handle API error', async () => {
+  it('should show error state on API failure', async () => {
     server.use(
-      rest.get('/api/users/:id', (req, res, ctx) => {
-        return res(ctx.status(500), ctx.json({ error: 'Server error' }));
+      rest.get('/api/users', (req, res, ctx) => {
+        return res(ctx.status(500));
       })
     );
 
-    render(<UserProfile userId="123" />);
+    renderWithQuery(<UserList />);
 
     await waitFor(() => {
       expect(screen.getByText(/error/i)).toBeInTheDocument();
@@ -401,180 +499,140 @@ describe('UserProfile', () => {
 });
 ```
 
-## Test Organization
-
-**File Structure**
-
-```
-src/
-├── components/
-│   ├── Button.tsx
-│   └── Button.test.tsx        # Colocate with component
-├── services/
-│   ├── user.service.ts
-│   └── user.service.test.ts
-└── __tests__/                  # Or separate test directory
-    ├── integration/
-    │   └── api.test.ts
-    └── e2e/
-        └── user-flow.test.ts
-```
-
-**Setup and Teardown**
+### Testing Hooks
 
 ```javascript
-describe('UserService', () => {
-  let mockDb;
+// hooks/useUser.test.js
+import { renderHook, waitFor } from '@testing-library/react';
+import { useUser } from './useUser';
 
-  // Runs once before all tests in this describe block
-  beforeAll(async () => {
-    mockDb = await setupTestDatabase();
+describe('useUser', () => {
+  it('should return loading state initially', () => {
+    const { result } = renderHook(() => useUser('123'));
+
+    expect(result.current.loading).toBe(true);
+    expect(result.current.user).toBeNull();
   });
 
-  // Runs before each test
-  beforeEach(async () => {
-    await mockDb.clear();
-    await mockDb.seed();
+  it('should return user data after fetch', async () => {
+    const { result } = renderHook(() => useUser('123'));
+
+    await waitFor(() => {
+      expect(result.current.loading).toBe(false);
+      expect(result.current.user).toMatchObject({
+        id: '123',
+        name: 'John',
+      });
+    });
   });
 
-  // Runs after each test
-  afterEach(() => {
-    jest.clearAllMocks();
-  });
+  it('should return error on fetch failure', async () => {
+    const { result } = renderHook(() => useUser('invalid'));
 
-  // Runs once after all tests
-  afterAll(async () => {
-    await mockDb.close();
+    await waitFor(() => {
+      expect(result.current.loading).toBe(false);
+      expect(result.current.error).toBeTruthy();
+    });
   });
-
-  it('test 1', () => { /* ... */ });
-  it('test 2', () => { /* ... */ });
 });
 ```
 
-## Snapshot Testing
+## Mocking Patterns
 
-**Use Sparingly**
+### Module Mocks
 
 ```javascript
-import { render } from '@testing-library/react';
-import { UserCard } from './UserCard';
+// Mock entire module
+jest.mock('../services/email.service');
 
-it('should match snapshot', () => {
-  const { container } = render(
-    <UserCard user={{ id: '1', name: 'John', email: 'john@example.com' }} />
-  );
+import { emailService } from '../services/email.service';
 
-  expect(container.firstChild).toMatchSnapshot();
+beforeEach(() => {
+  jest.clearAllMocks();
 });
 
-// Better: Test specific behavior instead
-it('should display user information', () => {
-  render(<UserCard user={{ id: '1', name: 'John', email: 'john@example.com' }} />);
+it('should send welcome email', async () => {
+  await userService.register({ email: 'john@example.com' });
 
-  expect(screen.getByText('John')).toBeInTheDocument();
-  expect(screen.getByText('john@example.com')).toBeInTheDocument();
+  expect(emailService.sendWelcome).toHaveBeenCalledWith('john@example.com');
+});
+```
+
+### Partial Mocks
+
+```javascript
+// Mock specific exports
+jest.mock('../utils/helpers', () => ({
+  ...jest.requireActual('../utils/helpers'),
+  generateId: jest.fn(() => 'mock-id'),
+}));
+```
+
+### Mock Implementations
+
+```javascript
+// Different return values
+mockFn.mockResolvedValueOnce({ id: '1' })
+      .mockResolvedValueOnce({ id: '2' })
+      .mockRejectedValueOnce(new Error('Failed'));
+
+// Custom implementation
+mockFn.mockImplementation((id) => {
+  if (id === 'invalid') throw new NotFoundError();
+  return { id, name: 'Test' };
 });
 ```
 
 ## Test Isolation
 
-**Tests Should Be Independent**
-
 ```javascript
-// Bad: Tests depend on each other
-describe('Counter', () => {
-  let counter = 0;
-
-  it('should increment', () => {
-    counter++; // ❌ Mutating shared state
-    expect(counter).toBe(1);
+describe('Database tests', () => {
+  beforeAll(async () => {
+    await db.connect();
   });
 
-  it('should increment again', () => {
-    counter++; // ❌ Depends on previous test
-    expect(counter).toBe(2);
-  });
-});
-
-// Good: Each test is independent
-describe('Counter', () => {
-  it('should increment from 0 to 1', () => {
-    let counter = 0;
-    counter++;
-    expect(counter).toBe(1);
+  afterAll(async () => {
+    await db.disconnect();
   });
 
-  it('should increment from 5 to 6', () => {
-    let counter = 5;
-    counter++;
-    expect(counter).toBe(6);
+  beforeEach(async () => {
+    // Clean slate for each test
+    await db.query('TRUNCATE TABLE users CASCADE');
+  });
+
+  afterEach(() => {
+    jest.clearAllMocks();
   });
 });
 ```
 
-## Performance Testing
-
-**Avoid Slow Tests**
+## Test Naming Conventions
 
 ```javascript
-// Bad: Unnecessary delays
-it('should process data', async () => {
-  await new Promise(resolve => setTimeout(resolve, 1000)); // ❌ Don't use real delays
-  const result = processData();
-  expect(result).toBe('processed');
-});
+// Good - describes behavior
+it('should return 404 when user not found')
+it('should hash password before storing')
+it('should prevent duplicate email registration')
+it('should display error message on invalid input')
 
-// Good: Use fake timers
-it('should process data after delay', () => {
-  jest.useFakeTimers();
-
-  const callback = jest.fn();
-  delayedProcess(callback);
-
-  jest.advanceTimersByTime(1000);
-
-  expect(callback).toHaveBeenCalled();
-
-  jest.useRealTimers();
-});
+// Bad - describes implementation
+it('calls the database')
+it('uses bcrypt')
+it('checks the array')
 ```
 
-## Custom Matchers
+## Checklist
 
-**Extend Jest for Domain-Specific Assertions**
+Before completing tests:
 
-```javascript
-expect.extend({
-  toBeValidEmail(received) {
-    const pass = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(received);
-    return {
-      pass,
-      message: () => `expected ${received} to be a valid email`
-    };
-  }
-});
-
-it('should validate email', () => {
-  expect('john@example.com').toBeValidEmail();
-  expect('invalid-email').not.toBeValidEmail();
-});
-```
-
-## Testing Best Practices Summary
-
-✓ Use Given-When-Then structure
-✓ One logical assertion per test
-✓ Descriptive test names
-✓ Mock external dependencies, not the system under test
-✓ Reset mocks between tests
-✓ Test happy path, error cases, and edge cases
-✓ Always await or return promises in async tests
-✓ Query by accessibility (role, label), not implementation
-✓ Use userEvent for realistic user interactions
-✓ Keep tests independent and isolated
-✓ Fast tests (use fake timers, mock network)
-✗ Don't test implementation details
-✗ Don't share mutable state between tests
-✗ Don't use real delays in tests
-✗ Don't overuse snapshot testing
+- [ ] Given-When-Then structure used
+- [ ] One logical assertion per test (or closely related)
+- [ ] Tests are independent (no shared mutable state)
+- [ ] Async operations properly awaited
+- [ ] Mocks reset between tests
+- [ ] Query by role/label, not test IDs (React)
+- [ ] userEvent over fireEvent (React)
+- [ ] No real delays (use fake timers)
+- [ ] Error scenarios tested
+- [ ] Edge cases covered
+- [ ] Coverage meets thresholds (60%/20%)
