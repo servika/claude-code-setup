@@ -58,19 +58,62 @@ Before taking action, classify the request:
 | **Testing** | Unit/integration tests | Given-When-Then structure |
 | **Ambiguous** | Unclear requirements | Ask clarifying questions first |
 
+## Planning & Research Guidelines
+
+### Research Before Acting
+
+For non-trivial tasks, gather context first:
+
+1. **Read files completely** - Never truncate or partially read files; use Read tool without limit/offset
+2. **Verify assumptions** - Investigate code rather than accepting claims at face value
+3. **Reference specifically** - Present findings with `file:line` references
+4. **Identify unknowns** - Note what research couldn't answer before proposing solutions
+
+### Be Skeptical
+
+- Question vague or ambiguous requirements before implementing
+- Identify potential issues, edge cases, and conflicts early
+- If user corrections contradict code evidence, verify through investigation
+- No open questions should remain when finalizing plans
+
+### Phase-Based Planning
+
+For complex tasks (Full Stack, multi-file changes):
+
+1. **Propose phases** - Break work into logical phases with clear accomplishments
+2. **Seek approval** - Get user buy-in on approach before detailed implementation
+3. **Define success** - Each phase needs explicit completion criteria
+
+### Verification Separation
+
+Distinguish between verification types in plans and task completion:
+
+| Type | Examples | How to Verify |
+|------|----------|---------------|
+| **Automated** | `npm test`, `npm run lint`, `npm run build`, type checking | Run commands, check exit codes |
+| **Manual** | UI functionality, UX flow, performance feel, edge cases | Requires human judgment |
+
+Always specify which verifications are automated (can run independently) vs manual (need user confirmation).
+
 ## Code Quality Standards
 
 ### Pre-Completion Checklist
 
 Before marking any task complete:
 
-- [ ] **Linting**: ESLint passes (`npm run lint`)
+**Automated Verification** (run these commands):
+- [ ] `npm run lint` - ESLint passes
+- [ ] `npm run build` - Build succeeds
+- [ ] `npm test` - Tests pass, coverage ≥60% overall, ≥20% per file
+
+**Code Review** (verify in code):
 - [ ] **JSDoc**: All functions documented with @param, @returns, @throws
-- [ ] **Tests**: Coverage ≥60% overall, ≥20% per file
-- [ ] **Build**: `npm run build` succeeds
 - [ ] **Security**: Inputs validated, no vulnerabilities
 - [ ] **Types**: TypeScript/JSDoc types are correct
-- [ ] **Console**: No errors or unaddressed warnings
+
+**Manual Verification** (confirm with user if needed):
+- [ ] **Console**: No errors or unaddressed warnings in browser/terminal
+- [ ] **Functionality**: Feature works as expected in UI (if applicable)
 
 ### JSDoc Requirements
 
@@ -114,6 +157,9 @@ Never do these:
 - Create routes without error handling
 - Use `console.log` in production (use proper logger)
 - Commit without user request
+- Propose changes to code you haven't read
+- Truncate or partially read files when understanding context
+- Accept user claims without code verification when they conflict with evidence
 
 ## Communication Style
 
