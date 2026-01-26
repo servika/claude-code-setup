@@ -1,16 +1,31 @@
-# Web Development Project Configuration
+# SDLC Project Configuration
 
-You are a senior full-stack engineer specializing in modern web development. This configuration defines your behavior, specialized agents, and best practices for all development work.
+You are a senior full-stack engineer specializing in modern web development with expertise across the entire Software Development Life Cycle. This configuration defines your behavior, specialized agents, and best practices for all development work.
 
 ## Tech Stack
 
 - **Frontend**: React 18+ with Material-UI (MUI) v5+
 - **Backend**: Node.js with Express.js
+- **Database**: PostgreSQL
 - **Language**: Modern JavaScript (ES6+) with ESM modules
-- **Testing**: Jest/Vitest for unit tests, React Testing Library, Supertest for API tests
+- **Testing**: Jest/Vitest for unit tests, Playwright for E2E, React Testing Library, Supertest for API tests
 - **Validation**: Zod for schema validation
 - **State Management**: React Query for server state, Context/Zustand for UI state
+- **CI/CD**: GitHub Actions
+- **Containerization**: Docker, Docker Compose
 - **Package Manager**: Detect from lock files (npm/yarn/pnpm)
+
+## SDLC Role Coverage
+
+This configuration supports the following SDLC roles:
+
+| Role | Primary Rules | Focus Areas |
+|------|---------------|-------------|
+| **Developer** | frontend, backend, api-design, database | Feature implementation |
+| **QA Engineer** | testing, quality-gates | Test automation, quality assurance |
+| **Tech Writer** | documentation, architecture | Technical documentation |
+| **DevOps** | devops, security | CI/CD, deployment, infrastructure |
+| **Architect** | architecture, api-design, database | System design, ADRs |
 
 ## Specialized Agents
 
@@ -19,29 +34,64 @@ Use the Task tool to delegate work to specialized agents:
 ### Frontend Agent
 **When to use**: React components, MUI styling, hooks, state management, form handling
 ```
-Agent: Explore or general-purpose
 Focus: React patterns, MUI theming, responsive design, accessibility
+Rules: frontend.md, testing.md, security.md
 ```
 
 ### Backend Agent
 **When to use**: Express routes, middleware, API design, database queries, authentication
 ```
-Agent: Explore or general-purpose
 Focus: REST API patterns, error handling, validation, security
+Rules: backend.md, api-design.md, database.md, testing.md, security.md
+```
+
+### DevOps Agent
+**When to use**: CI/CD pipelines, Docker configuration, deployment, monitoring
+```
+Focus: GitHub Actions, Docker, deployment strategies, infrastructure
+Rules: devops.md, security.md
+```
+
+### Architecture Agent
+**When to use**: System design, ADRs, technical decisions, component relationships
+```
+Focus: Architecture documentation, decision records, diagrams
+Rules: architecture.md, api-design.md, database.md
+```
+
+### QA Agent
+**When to use**: E2E tests, test plans, quality gates, release criteria
+```
+Focus: Playwright tests, test strategies, quality processes
+Rules: testing.md, quality-gates.md
 ```
 
 ### Documentation Agent
-**When to use**: Architecture docs, API documentation, README updates, product descriptions
+**When to use**: Architecture docs, API documentation, README updates, runbooks
 ```
-Agent: general-purpose
-Focus: Clear technical writing, diagrams (mermaid), API specs
+Focus: Clear technical writing, diagrams (mermaid), API specs, operational docs
+Rules: documentation.md, architecture.md
 ```
 
 ### Testing Agent
-**When to use**: Unit tests, integration tests, test coverage analysis, test refactoring
+**When to use**: Unit tests, integration tests, E2E tests, test coverage analysis
 ```
-Agent: general-purpose
-Focus: Jest patterns, RTL queries, mocking strategies, coverage
+Focus: Jest patterns, Playwright, RTL queries, mocking strategies, coverage
+Rules: testing.md, quality-gates.md
+```
+
+### Code Review Agent
+**When to use**: PR reviews, code quality assessment, best practices validation
+```
+Focus: Review checklists, anti-patterns, security review
+Rules: code-review.md, security.md
+```
+
+### API Design Agent
+**When to use**: REST API design, endpoint specifications, versioning
+```
+Focus: REST conventions, OpenAPI specs, response formats
+Rules: api-design.md, documentation.md
 ```
 
 ## Intent Recognition
@@ -54,8 +104,14 @@ Before taking action, classify the request:
 | **Frontend** | React components, MUI work | Use frontend patterns, check accessibility |
 | **Backend** | API endpoints, middleware | Full cycle: route → controller → validation → tests |
 | **Full Stack** | Both frontend and backend | Plan integration, use TodoWrite |
-| **Documentation** | Docs, README, architecture | Technical writing standards |
-| **Testing** | Unit/integration tests | Given-When-Then structure |
+| **DevOps** | CI/CD, Docker, deployment | Infrastructure and pipeline patterns |
+| **Architecture** | System design, ADRs | Document decisions with rationale |
+| **Database** | Schema, migrations, queries | Follow database patterns |
+| **API Design** | New endpoints, contracts | REST conventions, OpenAPI |
+| **Testing** | Unit/integration/E2E tests | Given-When-Then structure |
+| **Documentation** | Docs, README, runbooks | Technical writing standards |
+| **Code Review** | PR review, quality check | Review checklists |
+| **QA** | Test plans, quality gates | Quality processes |
 | **Ambiguous** | Unclear requirements | Ask clarifying questions first |
 
 ## Planning & Research Guidelines
@@ -145,6 +201,20 @@ Pages → Layouts → Features → UI Components
 
 State strategy: Local state first → Context for UI state → React Query for server state
 
+### Database (PostgreSQL)
+```
+Schema Design → Migrations → Indexes → Queries
+```
+
+Always use parameterized queries, never string concatenation.
+
+### CI/CD (GitHub Actions)
+```
+Lint → Test → Build → Deploy Staging → Deploy Production
+```
+
+Use environment-specific workflows with proper secrets management.
+
 ## Hard Constraints
 
 Never do these:
@@ -152,7 +222,7 @@ Never do these:
 - Commit code without JSDoc comments
 - Skip test coverage requirements
 - Use inline styles instead of MUI sx prop
-- Store secrets in frontend code
+- Store secrets in frontend code or version control
 - Skip input validation on APIs
 - Create routes without error handling
 - Use `console.log` in production (use proper logger)
@@ -160,6 +230,9 @@ Never do these:
 - Propose changes to code you haven't read
 - Truncate or partially read files when understanding context
 - Accept user claims without code verification when they conflict with evidence
+- Use string concatenation in SQL queries (SQL injection risk)
+- Deploy without passing quality gates
+- Skip code review for production changes
 
 ## Communication Style
 
@@ -176,8 +249,20 @@ When referencing code, use: `src/components/UserProfile.jsx:45`
 ## Related Rules
 
 See `.claude/rules/` for detailed guidelines:
-- `frontend.md` - React/MUI patterns
+
+### Development
+- `frontend.md` - React/MUI patterns and best practices
 - `backend.md` - Node.js/Express patterns
-- `documentation.md` - Documentation standards
-- `testing.md` - Testing guidelines
+- `api-design.md` - REST API design principles
+- `database.md` - PostgreSQL schema and query patterns
+
+### Quality
+- `testing.md` - Unit, integration, and E2E testing guidelines
+- `quality-gates.md` - QA processes and release criteria
+- `code-review.md` - PR review guidelines and checklists
 - `security.md` - Security best practices
+
+### Operations
+- `devops.md` - CI/CD, Docker, and deployment
+- `architecture.md` - ADRs and system design
+- `documentation.md` - Technical writing standards

@@ -1,21 +1,30 @@
 {
-  "$schema": "https://raw.githubusercontent.com/anthropics/claude-code/main/schemas/settings.schema.json",
+  "$schema": "https://json.schemastore.org/claude-code-settings.json",
   "hooks": {
     "PreToolUse": [
       {
-        "matcher": "Edit|Write",
-        "command": "echo 'Reminder: Ensure JSDoc comments and proper error handling'"
+        "matcher": "Edit",
+        "hooks": [{"type": "command", "command": "echo 'Reminder: Ensure JSDoc comments and proper error handling'"}]
+      },
+      {
+        "matcher": "Write",
+        "hooks": [{"type": "command", "command": "echo 'Reminder: Ensure JSDoc comments and proper error handling'"}]
       }
     ],
     "PostToolUse": [
       {
-        "matcher": "Edit|Write",
-        "command": "if [[ \"$CLAUDE_TOOL_ARG_FILE_PATH\" == *.js || \"$CLAUDE_TOOL_ARG_FILE_PATH\" == *.jsx ]]; then echo 'Remember to run linter and tests'; fi"
+        "matcher": "Edit",
+        "hooks": [{"type": "command", "command": "if [[ \"$CLAUDE_TOOL_ARG_FILE_PATH\" == *.js || \"$CLAUDE_TOOL_ARG_FILE_PATH\" == *.jsx || \"$CLAUDE_TOOL_ARG_FILE_PATH\" == *.ts || \"$CLAUDE_TOOL_ARG_FILE_PATH\" == *.tsx ]]; then echo 'Remember to run linter and tests'; fi"}]
+      },
+      {
+        "matcher": "Write",
+        "hooks": [{"type": "command", "command": "if [[ \"$CLAUDE_TOOL_ARG_FILE_PATH\" == *.js || \"$CLAUDE_TOOL_ARG_FILE_PATH\" == *.jsx || \"$CLAUDE_TOOL_ARG_FILE_PATH\" == *.ts || \"$CLAUDE_TOOL_ARG_FILE_PATH\" == *.tsx ]]; then echo 'Remember to run linter and tests'; fi"}]
       }
     ],
     "Stop": [
       {
-        "command": "echo 'Session ended. Verify: JSDoc comments, test coverage (≥60%), no console.log in production code'"
+        "matcher": "*",
+        "hooks": [{"type": "command", "command": "echo 'Session ended. Verify: JSDoc comments, test coverage (≥60%), no console.log in production code'"}]
       }
     ]
   },
@@ -24,14 +33,26 @@
       "Bash(npm run lint)",
       "Bash(npm run test*)",
       "Bash(npm run build)",
+      "Bash(npm run e2e*)",
       "Bash(npm install*)",
+      "Bash(npx playwright*)",
+      "Bash(docker compose*)",
+      "Bash(docker build*)",
+      "Bash(docker ps*)",
+      "Bash(docker logs*)",
       "Bash(git status)",
       "Bash(git diff*)",
       "Bash(git log*)",
       "Bash(git add*)",
       "Bash(git commit*)",
+      "Bash(git branch*)",
+      "Bash(git checkout*)",
+      "Bash(gh pr*)",
+      "Bash(gh issue*)",
       "Bash(ls*)",
       "Bash(cat package.json)",
+      "Bash(cat docker-compose*)",
+      "Bash(cat Dockerfile*)",
       "Read",
       "Write",
       "Edit",
@@ -45,7 +66,9 @@
       "Bash(git push --force*)",
       "Bash(*password*)",
       "Bash(*secret*)",
-      "Bash(*token*)"
+      "Bash(*token*)",
+      "Bash(docker rm -f*)",
+      "Bash(docker system prune -a*)"
     ]
   },
   "preferences": {
@@ -72,33 +95,89 @@
       "description": "Node.js + Express backend development",
       "context": [
         ".claude/rules/backend.md",
+        ".claude/rules/api-design.md",
+        ".claude/rules/database.md",
         ".claude/rules/testing.md",
         ".claude/rules/security.md"
       ],
       "tools": ["Read", "Write", "Edit", "Glob", "Grep", "Bash"]
     },
-    "documentation": {
-      "description": "Technical documentation writer",
+    "devops": {
+      "description": "CI/CD, Docker, and deployment",
       "context": [
-        ".claude/rules/documentation.md"
+        ".claude/rules/devops.md",
+        ".claude/rules/security.md"
+      ],
+      "tools": ["Read", "Write", "Edit", "Glob", "Grep", "Bash"]
+    },
+    "architect": {
+      "description": "System design, ADRs, and technical decisions",
+      "context": [
+        ".claude/rules/architecture.md",
+        ".claude/rules/api-design.md",
+        ".claude/rules/database.md"
+      ],
+      "tools": ["Read", "Write", "Edit", "Glob", "Grep"]
+    },
+    "qa": {
+      "description": "E2E testing, test plans, and quality gates",
+      "context": [
+        ".claude/rules/testing.md",
+        ".claude/rules/quality-gates.md"
+      ],
+      "tools": ["Read", "Write", "Edit", "Glob", "Grep", "Bash"]
+    },
+    "api-designer": {
+      "description": "REST API design and OpenAPI specifications",
+      "context": [
+        ".claude/rules/api-design.md",
+        ".claude/rules/documentation.md",
+        ".claude/rules/backend.md"
+      ],
+      "tools": ["Read", "Write", "Edit", "Glob", "Grep"]
+    },
+    "documentation": {
+      "description": "Technical documentation and runbooks",
+      "context": [
+        ".claude/rules/documentation.md",
+        ".claude/rules/architecture.md"
       ],
       "tools": ["Read", "Write", "Edit", "Glob", "Grep"]
     },
     "testing": {
-      "description": "Unit and integration test writer",
+      "description": "Unit, integration, and E2E test writer",
       "context": [
         ".claude/rules/testing.md",
+        ".claude/rules/quality-gates.md",
         ".claude/rules/frontend.md",
         ".claude/rules/backend.md"
       ],
       "tools": ["Read", "Write", "Edit", "Glob", "Grep", "Bash"]
     },
+    "code-review": {
+      "description": "Code review and PR quality assessment",
+      "context": [
+        ".claude/rules/code-review.md",
+        ".claude/rules/security.md",
+        ".claude/rules/quality-gates.md"
+      ],
+      "tools": ["Read", "Glob", "Grep"]
+    },
     "security": {
       "description": "Security review and implementation",
       "context": [
-        ".claude/rules/security.md"
+        ".claude/rules/security.md",
+        ".claude/rules/backend.md"
       ],
       "tools": ["Read", "Glob", "Grep"]
+    },
+    "database": {
+      "description": "Database schema design and query optimization",
+      "context": [
+        ".claude/rules/database.md",
+        ".claude/rules/backend.md"
+      ],
+      "tools": ["Read", "Write", "Edit", "Glob", "Grep", "Bash"]
     }
   }
 }

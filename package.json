@@ -1,33 +1,41 @@
 {
-  "name": "claude-code-configuration",
-  "version": "1.0.0",
-  "description": "Comprehensive Claude Code configuration for Node.js/Express/React/MUI full-stack development with best practices, security patterns, and automated documentation",
+  "name": "claude-configuration",
+  "version": "2.0.0",
+  "description": "Comprehensive Claude Code configuration for SDLC projects - covers developers, QA engineers, technical writers, DevOps, and architects with 11 specialized rule files",
   "keywords": [
+    "claude",
     "claude-code",
+    "cursor",
+    "ai-coding",
+    "sdlc",
+    "devops",
     "nodejs",
     "express",
     "react",
     "material-ui",
-    "mui",
+    "postgresql",
+    "playwright",
+    "github-actions",
+    "docker",
     "configuration",
     "best-practices",
     "coding-standards",
-    "git-hooks",
+    "code-review",
+    "testing",
     "documentation",
     "security",
-    "testing"
+    "architecture"
   ],
   "author": "Claude Code Configuration Contributors",
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/servika/claude-code-setup.git"
+    "url": "https://github.com/servika/claude-configuration.git"
   },
   "bugs": {
-    "url": "https://github.com/servika/claude-code-setup/issues"
+    "url": "https://github.com/servika/claude-configuration/issues"
   },
-  "homepage": "https://github.com/servika/claude-code-setup#readme",
-  "main": "index.js",
+  "homepage": "https://github.com/servika/claude-configuration#readme",
   "scripts": {
     "test": "echo \"This is a configuration repository - no tests to run\" && exit 0"
   },
