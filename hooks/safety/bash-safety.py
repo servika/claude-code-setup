@@ -6,9 +6,10 @@ Auto-allows safe, read-only bash commands to reduce permission prompt
 fatigue. Only applies to commands that cannot modify the system.
 
 Hook Type: PreToolUse (Bash)
-Exit Codes:
-  0 - Command is safe, allow without prompting
-  (no output) - Let the normal permission flow handle it
+Output:
+  Emits PreToolUse `hookSpecificOutput.permissionDecision: "allow"` for
+  read-only commands on the allowlist. Anything else produces no output, so
+  the normal permission flow applies. Always exits 0.
 """
 
 import json
@@ -139,8 +140,14 @@ def main():
         sys.exit(0)
 
     if is_safe(command):
-        # Auto-allow safe commands
-        print(json.dumps({'decision': 'allow'}))
+        # Auto-allow safe read-only commands without a permission prompt.
+        print(json.dumps({
+            'hookSpecificOutput': {
+                'hookEventName': 'PreToolUse',
+                'permissionDecision': 'allow',
+                'permissionDecisionReason': 'Read-only command matched the safe allowlist.',
+            },
+        }))
 
     sys.exit(0)
 

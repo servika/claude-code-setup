@@ -6,9 +6,9 @@ Blocks edits to sensitive files like .env, lockfiles, private keys,
 credentials, and CI/CD configs unless explicitly allowed.
 
 Hook Type: PreToolUse (Edit|Write)
-Exit Codes:
-  0 - File is not protected, allow
-  2 - File is protected, block edit
+Output:
+  Emits PreToolUse `hookSpecificOutput.permissionDecision: "deny"` with a
+  reason when the path is protected; exits 0 and stays silent otherwise.
 """
 
 import json
@@ -82,12 +82,14 @@ def main():
 
     for pattern, reason in PROTECTED_PATTERNS:
         if re.search(pattern, file_path, re.IGNORECASE):
-            output = {
-                'decision': 'block',
-                'reason': f"Protected file: {reason}. Path: {file_path}",
-            }
-            print(json.dumps(output))
-            sys.exit(2)
+            print(json.dumps({
+                'hookSpecificOutput': {
+                    'hookEventName': 'PreToolUse',
+                    'permissionDecision': 'deny',
+                    'permissionDecisionReason': f"Protected file: {reason}. Path: {file_path}",
+                },
+            }))
+            sys.exit(0)
 
     sys.exit(0)
 

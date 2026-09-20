@@ -56,10 +56,27 @@ case "$PROMPT" in
     */cost-analysis*)
         CONTEXT="Load devops rules: .claude/rules/devops.md, .claude/rules/architecture.md"
         ;;
+    */dependency-graph*|*/find-related*|*/auto-categorize*)
+        CONTEXT="Load structure rules: .claude/rules/architecture.md, .claude/rules/frontend.md, .claude/rules/backend.md"
+        ;;
+    */find-decisions*|*/timeline*)
+        CONTEXT="Load decision rules: .claude/rules/architecture.md, .claude/rules/documentation.md"
+        ;;
+    */skill-creator*)
+        CONTEXT="Skills live in .claude/skills/<name>/SKILL.md with name, description and model frontmatter. See docs/agent-teams-guide.md for agent-team patterns."
+        ;;
 esac
 
 if [ -n "$CONTEXT" ]; then
-    echo "{\"additionalContext\": \"$CONTEXT\"}"
+    python3 -c "
+import json, sys
+print(json.dumps({
+    'hookSpecificOutput': {
+        'hookEventName': 'UserPromptSubmit',
+        'additionalContext': sys.argv[1],
+    }
+}))
+" "$CONTEXT"
 fi
 
 exit 0
