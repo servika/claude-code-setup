@@ -1,10 +1,10 @@
 # Agent Team Patterns Guide
 
-How to use the Task tool to orchestrate multiple agents for parallel analysis, batch processing, and complex workflows.
+How to use the Agent tool to orchestrate multiple subagents for parallel analysis, batch processing, and complex workflows.
 
 ## Core Concepts
 
-Claude Code's Task tool launches subagents that work independently and return results. Agent teams combine multiple subagents to tackle complex tasks from different angles simultaneously.
+The Agent tool launches subagents that work independently and return results. Reusable subagent definitions live in `.claude/agents/*.md`. Agent teams combine multiple subagents to tackle complex tasks from different angles simultaneously.
 
 ### Why Use Agent Teams?
 
@@ -19,10 +19,14 @@ Claude Code's Task tool launches subagents that work independently and return re
 
 Launch N agents in parallel, each analysing a different dimension. Merge results into a unified output.
 
-```
-                 ┌─ Agent 1 (Dimension A) ─┐
-Input ──────────►├─ Agent 2 (Dimension B) ─├──────► Merged Output
-                 └─ Agent 3 (Dimension C) ─┘
+```mermaid
+flowchart LR
+    I[Input] --> A1[Agent 1 - Dimension A]
+    I --> A2[Agent 2 - Dimension B]
+    I --> A3[Agent 3 - Dimension C]
+    A1 --> M[Merged output]
+    A2 --> M
+    A3 --> M
 ```
 
 **When to use**: Multi-dimensional analysis where each dimension is independent.
@@ -41,7 +45,7 @@ Input ──────────►├─ Agent 2 (Dimension B) ─├──
 ```markdown
 ## Agent Team
 
-Launch these agents in parallel using the Task tool:
+Launch these agents in parallel with the Agent tool (one message, multiple tool calls):
 
 ### Agent 1: Technical Analysis
 
@@ -85,10 +89,11 @@ Combine outputs into unified report with:
 
 Process multiple items using the same agent template. Each item gets its own agent instance.
 
-```
-Item 1 ──► Agent Instance 1 ──┐
-Item 2 ──► Agent Instance 2 ──├──► Collected Results
-Item 3 ──► Agent Instance 3 ──┘
+```mermaid
+flowchart LR
+    I1[Item 1] --> G1[Agent instance 1] --> R[Collected results]
+    I2[Item 2] --> G2[Agent instance 2] --> R
+    I3[Item 3] --> G3[Agent instance 3] --> R
 ```
 
 **When to use**: Same analysis applied to many items (files, components, dependencies).
@@ -98,12 +103,12 @@ Item 3 ──► Agent Instance 3 ──┘
 1. Scan codebase for undocumented files
 2. Group into batches of 5-10
 3. Launch one Haiku agent per batch
-4. Each agent generates JSDoc/README content
+4. Each agent generates TSDoc/JSDoc and README content
 5. Collect and apply all results
 
 **Skills using this pattern**:
 
-- `/auto-document` (batch JSDoc generation)
+- `/auto-document` (batch doc-comment generation)
 - `/auto-categorize` (batch file classification)
 - `/dependency-checker` (batch dependency analysis)
 
@@ -111,8 +116,11 @@ Item 3 ──► Agent Instance 3 ──┘
 
 Quick assessment of many items, then deep analysis only on the most relevant.
 
-```
-All Items ──► N Haiku Agents (score relevance) ──► Top K items ──► Sonnet Deep Analysis
+```mermaid
+flowchart LR
+    A[All items] --> B[N Haiku agents score relevance]
+    B --> C[Top K items]
+    C --> D[Sonnet deep analysis]
 ```
 
 **When to use**: Large input set where only a subset needs detailed analysis.
@@ -131,8 +139,9 @@ All Items ──► N Haiku Agents (score relevance) ──► Top K items ─�
 
 Each stage feeds into the next. Used when later stages depend on earlier results.
 
-```
-Input ──► Stage 1 ──► Stage 2 ──► Stage 3 ──► Output
+```mermaid
+flowchart LR
+    I[Input] --> S1[Stage 1] --> S2[Stage 2] --> S3[Stage 3] --> O[Output]
 ```
 
 **When to use**: Tasks with clear dependencies between steps.
@@ -175,26 +184,28 @@ Input ──► Stage 1 ──► Stage 2 ──► Stage 3 ──► Output
 
 Break the task into independent analysis dimensions:
 
+```mermaid
+flowchart TD
+    R[Code quality report] --> C[Complexity analysis]
+    R --> T[Test coverage]
+    R --> L[Lint and style]
+    R --> D[Dependency health]
+    R --> B[Build and bundle]
 ```
-Code Quality Report:
-├── Complexity Analysis    (independent)
-├── Test Coverage         (independent)
-├── Lint & Style          (independent)
-├── Dependency Health     (independent)
-└── Build & Bundle        (independent)
-```
+
+Each branch is independent, so all five can run at once.
 
 ### Step 2: Assign Models
 
 Match model capability to dimension complexity:
 
-```
-├── Complexity Analysis    → Haiku  (counting/measuring)
-├── Test Coverage         → Haiku  (reading coverage reports)
-├── Lint & Style          → Haiku  (running/parsing linter)
-├── Dependency Health     → Sonnet (assessing vulnerability impact)
-└── Build & Bundle        → Haiku  (measuring sizes)
-```
+| Dimension         | Model  | Why                             |
+| ----------------- | ------ | ------------------------------- |
+| Complexity        | Haiku  | Counting and measuring          |
+| Test coverage     | Haiku  | Reading coverage reports        |
+| Lint and style    | Haiku  | Running and parsing the linter  |
+| Dependency health | Sonnet | Judging vulnerability impact    |
+| Build and bundle  | Haiku  | Measuring sizes                 |
 
 ### Step 3: Define Output Format
 
@@ -269,9 +280,9 @@ Use sequential when:
 
 Use the `/skill-creator` skill to generate new skills with agent teams. It supports all four patterns and will scaffold the correct structure.
 
-Alternatively, copy an existing skill from `.claude/skills/` and modify:
+Alternatively, copy an existing skill directory from `.claude/skills/<name>/SKILL.md` and modify:
 
-1. Update the YAML frontmatter (`description`, `model`)
+1. Update the YAML frontmatter (`name`, `description`, `model`)
 2. Adjust the agent team section (agents, models, prompts)
 3. Update the merge strategy
 4. Test with a real input

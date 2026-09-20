@@ -3,31 +3,54 @@
   "hooks": {
     "UserPromptSubmit": [
       {
-        "matcher": ".*",
         "hooks": [
-          {"type": "command", "command": "python3 hooks/security/secret-detection.py"},
-          {"type": "command", "command": "bash hooks/ux/context-loader.sh"}
+          {
+            "type": "command",
+            "command": "python3 \"${CLAUDE_PROJECT_DIR}/hooks/security/secret-detection.py\"",
+            "timeout": 10
+          },
+          {
+            "type": "command",
+            "command": "bash \"${CLAUDE_PROJECT_DIR}/hooks/ux/context-loader.sh\"",
+            "timeout": 10
+          }
         ]
       }
     ],
     "PreToolUse": [
       {
-        "matcher": "Edit|Write",
+        "matcher": "Edit|Write|NotebookEdit",
         "hooks": [
-          {"type": "command", "command": "python3 hooks/security/secret-file-scanner.py"},
-          {"type": "command", "command": "python3 hooks/security/file-protection.py"}
+          {
+            "type": "command",
+            "command": "python3 \"${CLAUDE_PROJECT_DIR}/hooks/security/secret-file-scanner.py\"",
+            "timeout": 15
+          },
+          {
+            "type": "command",
+            "command": "python3 \"${CLAUDE_PROJECT_DIR}/hooks/security/file-protection.py\"",
+            "timeout": 10
+          }
         ]
       },
       {
         "matcher": "Bash",
         "hooks": [
-          {"type": "command", "command": "python3 hooks/safety/bash-safety.py"}
+          {
+            "type": "command",
+            "command": "python3 \"${CLAUDE_PROJECT_DIR}/hooks/safety/bash-safety.py\"",
+            "timeout": 10
+          }
         ]
       },
       {
         "matcher": "Grep",
         "hooks": [
-          {"type": "command", "command": "bash hooks/ux/search-hint.sh"}
+          {
+            "type": "command",
+            "command": "bash \"${CLAUDE_PROJECT_DIR}/hooks/ux/search-hint.sh\"",
+            "timeout": 5
+          }
         ]
       }
     ],
@@ -35,176 +58,113 @@
       {
         "matcher": "Edit|Write",
         "hooks": [
-          {"type": "command", "command": "python3 hooks/quality/code-formatter.py"},
-          {"type": "command", "command": "python3 hooks/quality/import-checker.py"},
-          {"type": "command", "command": "python3 hooks/quality/naming-convention.py"}
+          {
+            "type": "command",
+            "command": "python3 \"${CLAUDE_PROJECT_DIR}/hooks/quality/code-formatter.py\"",
+            "timeout": 60
+          },
+          {
+            "type": "command",
+            "command": "python3 \"${CLAUDE_PROJECT_DIR}/hooks/quality/import-checker.py\"",
+            "timeout": 20
+          },
+          {
+            "type": "command",
+            "command": "python3 \"${CLAUDE_PROJECT_DIR}/hooks/quality/naming-convention.py\"",
+            "timeout": 10
+          }
         ]
       }
     ],
     "Stop": [
       {
-        "matcher": "*",
         "hooks": [
-          {"type": "command", "command": "bash hooks/notification/desktop-notify.sh"}
+          {
+            "type": "command",
+            "command": "bash \"${CLAUDE_PROJECT_DIR}/hooks/notification/desktop-notify.sh\"",
+            "timeout": 10
+          }
         ]
       }
     ]
   },
   "permissions": {
     "allow": [
-      "Bash(npm run lint)",
+      "Read",
+      "Glob",
+      "Grep",
+      "Edit",
+      "Write",
+      "Bash(npm run lint*)",
+      "Bash(npm run typecheck*)",
       "Bash(npm run test*)",
-      "Bash(npm run build)",
+      "Bash(npm run build*)",
       "Bash(npm run e2e*)",
+      "Bash(npm ci)",
       "Bash(npm install*)",
+      "Bash(npm audit*)",
+      "Bash(npm outdated*)",
+      "Bash(pnpm *)",
+      "Bash(yarn *)",
+      "Bash(npx tsc --noEmit*)",
+      "Bash(npx vitest*)",
       "Bash(npx playwright*)",
+      "Bash(npx eslint*)",
       "Bash(npx prettier*)",
-      "Bash(docker compose*)",
+      "Bash(npx biome*)",
+      "Bash(npx osv-scanner*)",
+      "Bash(docker compose *)",
       "Bash(docker build*)",
       "Bash(docker ps*)",
       "Bash(docker logs*)",
-      "Bash(git status)",
+      "Bash(git status*)",
       "Bash(git diff*)",
       "Bash(git log*)",
+      "Bash(git show*)",
+      "Bash(git branch*)",
       "Bash(git add*)",
       "Bash(git commit*)",
-      "Bash(git branch*)",
       "Bash(git checkout*)",
-      "Bash(gh pr*)",
-      "Bash(gh issue*)",
+      "Bash(gh pr view*)",
+      "Bash(gh pr list*)",
+      "Bash(gh pr diff*)",
+      "Bash(gh issue view*)",
+      "Bash(gh issue list*)",
       "Bash(gh api*)",
       "Bash(ls*)",
       "Bash(cat package.json)",
+      "Bash(cat tsconfig*.json)",
       "Bash(cat docker-compose*)",
-      "Bash(cat Dockerfile*)",
-      "Bash(npm audit*)",
-      "Bash(npm outdated*)",
-      "Read",
-      "Write",
-      "Edit",
-      "Glob",
-      "Grep"
+      "Bash(cat Dockerfile*)"
+    ],
+    "ask": [
+      "Bash(git push*)",
+      "Bash(gh pr create*)",
+      "Bash(gh pr merge*)",
+      "Bash(npm publish*)",
+      "Bash(docker push*)",
+      "Bash(*migrate*)",
+      "Bash(psql*)",
+      "WebFetch"
     ],
     "deny": [
-      "Bash(rm -rf /)",
-      "Bash(rm -rf ~)",
-      "Bash(*--force*)",
+      "Read(.env)",
+      "Read(.env.*)",
+      "Read(**/*.pem)",
+      "Read(**/*.key)",
+      "Read(**/id_rsa*)",
+      "Edit(.env)",
+      "Edit(.env.*)",
+      "Write(.env)",
+      "Write(.env.*)",
+      "Bash(rm -rf /*)",
+      "Bash(rm -rf ~*)",
       "Bash(git push --force*)",
-      "Bash(*password*)",
-      "Bash(*secret*)",
-      "Bash(*token*)",
-      "Bash(docker rm -f*)",
-      "Bash(docker system prune -a*)"
+      "Bash(git reset --hard*)",
+      "Bash(docker system prune -a*)",
+      "Bash(curl * | sh)",
+      "Bash(curl * | bash)",
+      "Bash(wget * | sh)"
     ]
-  },
-  "preferences": {
-    "autoCompact": true,
-    "compactThreshold": 80,
-    "codeStyle": {
-      "singleQuotes": true,
-      "semicolons": true,
-      "trailingCommas": "es5",
-      "tabWidth": 2
-    }
-  },
-  "agents": {
-    "frontend": {
-      "description": "React + MUI frontend development",
-      "context": [
-        ".claude/rules/frontend.md",
-        ".claude/rules/testing.md",
-        ".claude/rules/security.md"
-      ],
-      "tools": ["Read", "Write", "Edit", "Glob", "Grep", "Bash"]
-    },
-    "backend": {
-      "description": "Node.js + Express backend development",
-      "context": [
-        ".claude/rules/backend.md",
-        ".claude/rules/api-design.md",
-        ".claude/rules/database.md",
-        ".claude/rules/testing.md",
-        ".claude/rules/security.md"
-      ],
-      "tools": ["Read", "Write", "Edit", "Glob", "Grep", "Bash"]
-    },
-    "devops": {
-      "description": "CI/CD, Docker, and deployment",
-      "context": [
-        ".claude/rules/devops.md",
-        ".claude/rules/security.md"
-      ],
-      "tools": ["Read", "Write", "Edit", "Glob", "Grep", "Bash"]
-    },
-    "architect": {
-      "description": "System design, ADRs, and technical decisions",
-      "context": [
-        ".claude/rules/architecture.md",
-        ".claude/rules/api-design.md",
-        ".claude/rules/database.md",
-        ".claude/rules/no-ascii-diagrams.md"
-      ],
-      "tools": ["Read", "Write", "Edit", "Glob", "Grep"]
-    },
-    "qa": {
-      "description": "E2E testing, test plans, and quality gates",
-      "context": [
-        ".claude/rules/testing.md",
-        ".claude/rules/quality-gates.md"
-      ],
-      "tools": ["Read", "Write", "Edit", "Glob", "Grep", "Bash"]
-    },
-    "api-designer": {
-      "description": "REST API design and OpenAPI specifications",
-      "context": [
-        ".claude/rules/api-design.md",
-        ".claude/rules/documentation.md",
-        ".claude/rules/backend.md"
-      ],
-      "tools": ["Read", "Write", "Edit", "Glob", "Grep"]
-    },
-    "documentation": {
-      "description": "Technical documentation and runbooks",
-      "context": [
-        ".claude/rules/documentation.md",
-        ".claude/rules/architecture.md"
-      ],
-      "tools": ["Read", "Write", "Edit", "Glob", "Grep"]
-    },
-    "testing": {
-      "description": "Unit, integration, and E2E test writer",
-      "context": [
-        ".claude/rules/testing.md",
-        ".claude/rules/quality-gates.md",
-        ".claude/rules/frontend.md",
-        ".claude/rules/backend.md"
-      ],
-      "tools": ["Read", "Write", "Edit", "Glob", "Grep", "Bash"]
-    },
-    "code-review": {
-      "description": "Code review and PR quality assessment",
-      "context": [
-        ".claude/rules/code-review.md",
-        ".claude/rules/security.md",
-        ".claude/rules/quality-gates.md"
-      ],
-      "tools": ["Read", "Glob", "Grep"]
-    },
-    "security": {
-      "description": "Security review and implementation",
-      "context": [
-        ".claude/rules/security.md",
-        ".claude/rules/backend.md"
-      ],
-      "tools": ["Read", "Glob", "Grep"]
-    },
-    "database": {
-      "description": "Database schema design and query optimization",
-      "context": [
-        ".claude/rules/database.md",
-        ".claude/rules/backend.md"
-      ],
-      "tools": ["Read", "Write", "Edit", "Glob", "Grep", "Bash"]
-    }
   }
 }

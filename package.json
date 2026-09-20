@@ -1,22 +1,29 @@
 {
   "name": "claude-configuration",
-  "version": "2.0.0",
-  "description": "Comprehensive Claude Code configuration for SDLC projects - covers developers, QA engineers, technical writers, DevOps, and architects with 11 specialized rule files",
+  "version": "3.0.0",
+  "description": "Claude Code configuration for SDLC teams - 12 rule files, 37 skills, 11 subagents and 10 hooks for TypeScript, React 19 + MUI v9, Node 24 + Express 5 and PostgreSQL 18",
   "keywords": [
     "claude",
     "claude-code",
-    "cursor",
     "ai-coding",
+    "agents",
+    "subagents",
+    "skills",
+    "hooks",
     "sdlc",
-    "devops",
+    "typescript",
     "nodejs",
     "express",
     "react",
     "material-ui",
     "postgresql",
+    "vitest",
     "playwright",
+    "zod",
     "github-actions",
     "docker",
+    "opentelemetry",
+    "owasp",
     "configuration",
     "best-practices",
     "coding-standards",
@@ -41,6 +48,6 @@
   },
   "private": false,
   "engines": {
-    "node": ">=18.0.0"
+    "node": ">=22"
   }
 }

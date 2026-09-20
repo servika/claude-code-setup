@@ -8,7 +8,8 @@ connection strings) and blocks them before Claude processes them.
 Hook Type: UserPromptSubmit
 Exit Codes:
   0 - No secrets detected, allow
-  2 - Secret detected, block prompt
+  2 - Secret detected: the prompt is blocked and the reason on stderr is
+      shown to the user (UserPromptSubmit has no permissionDecision).
 """
 
 import json
@@ -113,12 +114,12 @@ def main():
 
     if findings:
         types = list(set(f['type'] for f in findings))
-        output = {
-            'decision': 'block',
-            'reason': f"Potential secrets detected in prompt: {', '.join(types)}. "
-                      f"Remove secrets before submitting. Use environment variables instead.",
-        }
-        print(json.dumps(output))
+        reason = (
+            f"Potential secrets detected in prompt: {', '.join(types)}. "
+            f"Remove secrets before submitting. Use environment variables instead."
+        )
+        # UserPromptSubmit blocks via exit code 2 with the reason on stderr.
+        print(reason, file=sys.stderr)
         sys.exit(2)
 
     sys.exit(0)

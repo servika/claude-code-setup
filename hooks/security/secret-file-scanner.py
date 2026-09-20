@@ -6,9 +6,9 @@ Scans file content being written or edited for embedded secrets
 before the changes are applied.
 
 Hook Type: PreToolUse (Edit|Write)
-Exit Codes:
-  0 - No secrets found, allow
-  2 - Secret found in file content, block
+Output:
+  Emits PreToolUse `hookSpecificOutput.permissionDecision: "deny"` with a
+  reason when a secret is found; exits 0 and stays silent otherwise.
 """
 
 import json
@@ -79,13 +79,17 @@ def main():
 
     if findings:
         types = list(set(findings))
-        output = {
-            'decision': 'block',
-            'reason': f"Potential secrets detected in file content: {', '.join(types)}. "
-                      f"Use environment variables (process.env.X) instead of hardcoding secrets.",
-        }
-        print(json.dumps(output))
-        sys.exit(2)
+        print(json.dumps({
+            'hookSpecificOutput': {
+                'hookEventName': 'PreToolUse',
+                'permissionDecision': 'deny',
+                'permissionDecisionReason': (
+                    f"Potential secrets detected in file content: {', '.join(types)}. "
+                    f"Use environment variables (process.env.X) instead of hardcoding secrets."
+                ),
+            },
+        }))
+        sys.exit(0)
 
     sys.exit(0)
 

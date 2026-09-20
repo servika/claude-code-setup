@@ -22,3 +22,10 @@ yarn-error.log*
 # Build outputs
 dist/
 build/
+
+# Claude Code local overrides
+.claude/settings.local.json
+
+# Python
+__pycache__/
+*.pyc

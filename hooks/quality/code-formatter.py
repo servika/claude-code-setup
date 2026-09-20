@@ -6,15 +6,27 @@ Auto-formats files after Edit/Write operations using the appropriate
 formatter for the file type (Prettier, Black, gofmt, etc.)
 
 Hook Type: PostToolUse (Edit|Write)
-Exit Codes:
-  0 - Formatted successfully or no formatter needed
-  1 - Formatter warning (non-blocking)
+Output:
+  Non-blocking. Warnings reach Claude as PostToolUse
+  `hookSpecificOutput.additionalContext`; the exit code is always 0.
 """
 
 import json
 import os
 import subprocess
 import sys
+
+
+def warn(message):
+    """Surface a non-blocking note to Claude via PostToolUse additionalContext."""
+    print(json.dumps({
+        'hookSpecificOutput': {
+            'hookEventName': 'PostToolUse',
+            'additionalContext': message,
+        },
+    }))
+    sys.exit(0)
+
 
 
 # Customise: Map file extensions to formatters
@@ -115,18 +127,12 @@ def main():
         )
         if result.returncode != 0:
             # Non-blocking warning
-            print(json.dumps({
-                'message': f"Formatter warning for {os.path.basename(file_path)}: {result.stderr[:200]}",
-            }))
-            sys.exit(1)
+            warn(f"Formatter warning for {os.path.basename(file_path)}: {result.stderr[:200]}")
     except FileNotFoundError:
         # Formatter not installed, skip silently
         pass
     except subprocess.TimeoutExpired:
-        print(json.dumps({
-            'message': f"Formatter timed out for {os.path.basename(file_path)}",
-        }))
-        sys.exit(1)
+        warn(f"Formatter timed out for {os.path.basename(file_path)}")
 
     sys.exit(0)
 
