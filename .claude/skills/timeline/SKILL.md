@@ -1,6 +1,6 @@
 ---
 name: timeline
-description: Generate visual timelines from git history, milestones, and project events
+description: Generate visual timelines from git history, milestones, and project events. Use when asked how a project evolved or for a milestone history.
 model: sonnet
 ---
 

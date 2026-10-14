@@ -9,10 +9,11 @@ PostgreSQL 18, Vitest 5, OWASP Top 10:2025.
 
 ## Features
 
-- **12 Rule Files** covering frontend, backend, DevOps, architecture, testing, and more
+- **12 Rule Files** covering frontend, backend, DevOps, architecture, testing, and more -
+  path-scoped, so each loads only when you work on matching files
 - **37 Skills (Slash Commands)** in the current `SKILL.md` format, several using agent teams
 - **11 Subagents** defined as `.claude/agents/*.md` for task delegation
-- **10 Production-Ready Hooks** for security, quality, and UX automation
+- **9 Production-Ready Hooks** for security, quality, and UX automation
 - **Complete SDLC Coverage** for all team roles
 - **Quality Gates** separating automated verification from what genuinely needs a human
 
@@ -92,8 +93,7 @@ hooks/
 │   ├── import-checker.py              # Validate import paths
 │   └── naming-convention.py           # Enforce file naming
 ├── ux/
-│   ├── context-loader.sh              # Auto-load skill context
-│   └── search-hint.sh                 # Suggest faster searches
+│   └── context-loader.sh              # Point skills at their rule files
 ├── safety/
 │   └── bash-safety.py                 # Auto-allow safe commands
 └── notification/
@@ -107,15 +107,15 @@ docs/
 ### Option 1: Clone and Copy
 
 ```bash
-git clone https://github.com/servika/claude-configuration.git
-cp -r claude-configuration/.claude your-project/
-cp -r claude-configuration/hooks your-project/
+git clone https://github.com/servika/claude-code-setup.git
+cp -r claude-code-setup/.claude your-project/
+cp -r claude-code-setup/hooks your-project/
 ```
 
 ### Option 2: Use degit
 
 ```bash
-npx degit servika/claude-configuration your-project-config
+npx degit servika/claude-code-setup your-project-config
 cp -r your-project-config/.claude your-project/
 cp -r your-project-config/hooks your-project/
 ```
@@ -151,7 +151,7 @@ automatically, or you can name one explicitly.
 | --------------- | ------------------------------------ | ------ | --------------------------------------- |
 | `frontend`      | React 19 + MUI v9 development        | sonnet | frontend, testing, security             |
 | `backend`       | Node 24 + Express 5 APIs             | sonnet | backend, api-design, database, security |
-| `database`      | PostgreSQL 18 schema and queries     | sonnet | database, backend                       |
+| `database`      | PostgreSQL 18 schema and queries     | opus   | database, backend                       |
 | `api-designer`  | REST contracts and OpenAPI 3.1       | sonnet | api-design, documentation, backend      |
 | `devops`        | CI/CD, Docker, observability         | sonnet | devops, security                        |
 | `architect`     | System design, ADRs, C4              | opus   | architecture, api-design, database      |
@@ -252,11 +252,10 @@ Hooks run automatically during Claude Code sessions to enforce quality and secur
 | `secret-detection.py`    | UserPromptSubmit | Block secrets (AWS, JWT, Stripe, etc.) in prompts |
 | `secret-file-scanner.py` | PreToolUse       | Block secrets in file writes                      |
 | `file-protection.py`     | PreToolUse       | Protect .env, lockfiles, keys from modification   |
-| `code-formatter.py`      | PostToolUse      | Auto-format with Prettier/Black/gofmt after edits |
+| `code-formatter.py`      | PostToolUse      | Auto-format after edits; tells Claude to re-read  |
 | `import-checker.py`      | PostToolUse      | Validate JS/TS import paths resolve to files      |
 | `naming-convention.py`   | PostToolUse      | Enforce file naming conventions per directory     |
-| `context-loader.sh`      | UserPromptSubmit | Auto-load relevant rules when skills are invoked  |
-| `search-hint.sh`         | PreToolUse       | Suggest faster search methods (Glob over Grep)    |
+| `context-loader.sh`      | UserPromptSubmit | Point invoked skills at the rule files they use   |
 | `bash-safety.py`         | PreToolUse       | Auto-allow safe read-only commands                |
 | `desktop-notify.sh`      | Stop             | Desktop notification (macOS/Linux) on completion  |
 
@@ -294,6 +293,14 @@ anything else = non-blocking error.
 - **code-review.md** - PR templates, review checklists, supply-chain and AI-authored-code review
 - **security.md** - OWASP Top 10:2025, argon2id, `jose`, CSP without `unsafe-inline`, supply-chain
   controls
+
+### How Rules Load
+
+Each rule file except `no-ascii-diagrams.md` declares `paths:` in its frontmatter, so Claude Code
+loads it only when a matching file is read or edited (for example `database.md` for
+`**/migrations/**` and `**/*.sql`). Without this, all twelve files - over 400 KB - would sit in
+every session's context, including one-line fixes. Subagents and skills that need a rule before
+any matching file exists read it explicitly. Adjust the globs to your project layout.
 
 ### Operations Rules
 
@@ -350,7 +357,7 @@ Create `.claude/skills/<name>/SKILL.md`:
 ```markdown
 ---
 name: my-skill
-description: Short description shown when Claude decides whether to use this skill
+description: What it does in one sentence. Use when <trigger situations>.
 model: sonnet
 ---
 
@@ -364,7 +371,9 @@ Or use `/skill-creator` to generate one interactively.
 ### Adjust Permissions
 
 Edit `permissions` in `.claude/settings.json`. Rules are `allow`, `ask`, and `deny`, with `deny`
-taking precedence. Personal overrides belong in `.claude/settings.local.json` (gitignored).
+taking precedence. `git add`/`git commit` and dependency installs (`npm install`, `pnpm add`,
+`yarn add`) are in `ask`, matching the "commit only on request" and "justify every dependency"
+rules; lockfile installs (`npm ci`, `pnpm install --frozen-lockfile`) stay allowed. Personal overrides belong in `.claude/settings.local.json` (gitignored).
 
 ### Customise Hooks
 

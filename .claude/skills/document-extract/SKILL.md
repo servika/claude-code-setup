@@ -1,6 +1,6 @@
 ---
 name: document-extract
-description: Extract structured content from any document format with auto-detection
+description: Extract structured content from any document format with auto-detection. Use when the user provides a document and its format is unknown or mixed.
 model: sonnet
 ---
 

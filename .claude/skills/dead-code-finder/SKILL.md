@@ -1,6 +1,6 @@
 ---
 name: dead-code-finder
-description: Detect unused files, unreachable components, dead routes, and unused exports
+description: Detect unused files, unreachable components, dead routes, and unused exports. Use before a cleanup, when the bundle or codebase seems bloated, or after removing a feature.
 model: sonnet
 ---
 
@@ -39,7 +39,7 @@ Find dead code across the project using four parallel scanners for components, r
 
 ### Phase 2: Parallel Scanning (Agent Team)
 
-Launch 4 agents using the Task tool:
+Launch up to 4 agents in parallel with the Agent tool (one message, several calls; skip a dimension with nothing to analyse):
 
 **Agent 1: Component Scanner** (Haiku)
 Task: Find unreachable React components

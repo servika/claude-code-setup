@@ -1,6 +1,6 @@
 ---
 name: auto-document
-description: Batch-generate TSDoc/JSDoc comments, README sections, and API documentation for undocumented code
+description: Batch-generate TSDoc/JSDoc comments, README sections, and API documentation for undocumented code. Use when exported code lacks doc comments or a README/API section is missing or stale.
 model: sonnet
 ---
 
@@ -41,7 +41,7 @@ Batch-generate documentation for undocumented code using parallel Haiku agents, 
 
 ### Phase 2: Parallel Documentation (Batch Agents)
 
-Spawn N Haiku agents (one per batch) using the Task tool:
+Spawn N Haiku agents (one per batch) with the Agent tool:
 
 **Documentation Agent** (Haiku, one per batch)
 Task: Generate documentation for assigned files

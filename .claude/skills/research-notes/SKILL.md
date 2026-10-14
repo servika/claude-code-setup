@@ -1,6 +1,6 @@
 ---
 name: research-notes
-description: Create structured research notes from any source material with parallel knowledge extraction
+description: Create structured research notes from any source material with parallel knowledge extraction. Use when the user wants durable notes from a paper, talk, or source material.
 model: sonnet
 ---
 
@@ -42,7 +42,7 @@ Create comprehensive research notes from books, papers, talks, or courses using 
 
 ### Phase 2: Parallel Extraction (Agent Team)
 
-Launch 3 agents using the Task tool:
+Launch up to 3 agents in parallel with the Agent tool (one message, several calls; skip a dimension with nothing to analyse):
 
 **Agent 1: Concept Extractor** (Sonnet)
 Task: Extract core concepts and mental models
@@ -53,7 +53,7 @@ Task: Extract core concepts and mental models
 - Connections to existing knowledge (React, Express, PostgreSQL patterns)
 Return: Structured concept list with definitions and relationships
 
-**Agent 2: Pattern Finder** (Haiku)
+**Agent 2: Pattern Finder** (Sonnet)
 Task: Identify patterns and practices
 - Design patterns and architectural patterns
 - Best practices and recommended approaches

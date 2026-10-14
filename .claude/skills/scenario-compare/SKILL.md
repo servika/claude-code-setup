@@ -1,6 +1,6 @@
 ---
 name: scenario-compare
-description: Compare architectural scenarios with cost, timeline, complexity, risk, and benefit analysis
+description: Compare architectural scenarios with cost, timeline, complexity, risk, and benefit analysis. Use when choosing between two or more architectural or technical options.
 model: sonnet
 ---
 
@@ -40,9 +40,9 @@ Compare 2-4 architectural scenarios side-by-side using parallel analysis agents,
 
 ### Phase 2: Parallel Analysis (Agent Team)
 
-Launch 3 agents using the Task tool:
+Launch up to 3 agents in parallel with the Agent tool (one message, several calls; skip a dimension with nothing to analyse):
 
-**Agent 1: Cost & Financial Analysis** (Haiku)
+**Agent 1: Cost & Financial Analysis** (Sonnet)
 Task: Evaluate financial aspects of each scenario
 - Development cost (person-weeks)
 - Infrastructure cost (monthly/annual)

@@ -1,6 +1,6 @@
 ---
 name: cost-analysis
-description: Analyse infrastructure, licensing, and operational costs with breakdown and optimisation recommendations
+description: Analyse infrastructure, licensing, and operational costs with breakdown and optimisation recommendations. Use when estimating what a system or change costs to run, or looking for savings.
 model: sonnet
 ---
 
@@ -40,9 +40,9 @@ Analyse system costs across three dimensions using parallel agents, producing a 
 
 ### Phase 2: Parallel Analysis (Agent Team)
 
-Launch 3 agents using the Task tool:
+Launch up to 3 agents in parallel with the Agent tool (one message, several calls; skip a dimension with nothing to analyse):
 
-**Agent 1: Infrastructure Costs** (Haiku)
+**Agent 1: Infrastructure Costs** (Sonnet)
 Task: Analyse compute and platform costs
 - Compute (servers, containers, serverless functions)
 - Storage (databases, file storage, backups)
@@ -51,7 +51,7 @@ Task: Analyse compute and platform costs
 - Monitoring and logging platforms
 Return: Infrastructure cost table with monthly/annual estimates
 
-**Agent 2: Licensing & SaaS Costs** (Haiku)
+**Agent 2: Licensing & SaaS Costs** (Sonnet)
 Task: Analyse third-party service costs
 - SaaS subscriptions (monitoring, error tracking, analytics)
 - API costs (payment processors, email services, SMS)

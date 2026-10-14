@@ -1,6 +1,6 @@
 ---
 name: diagram-review
-description: Analyse existing architecture diagrams for completeness, readability, and accuracy
+description: Analyse existing architecture diagrams for completeness, readability, and accuracy. Use when an existing diagram needs checking against the code or for clarity.
 model: sonnet
 ---
 

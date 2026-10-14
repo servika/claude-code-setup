@@ -1,6 +1,6 @@
 ---
 name: diagram
-description: Generate architecture diagrams in multiple formats using Mermaid syntax
+description: Generate architecture diagrams in multiple formats using Mermaid syntax. Use when the user asks for a flowchart, sequence, ER, state, or architecture diagram.
 model: sonnet
 ---
 

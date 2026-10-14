@@ -10,7 +10,7 @@ The Agent tool launches subagents that work independently and return results. Re
 
 - **Speed**: Parallel agents complete faster than sequential analysis
 - **Depth**: Each agent focuses on one dimension, producing deeper results
-- **Cost efficiency**: Use cheaper models (Haiku) for straightforward tasks, expensive models (Sonnet/Opus) only where needed
+- **Cost efficiency**: Use Haiku for mechanical work (scan, count, extract), Sonnet for judgement, Opus for hard trade-offs
 - **Consistency**: Structured patterns produce predictable, mergeable outputs
 
 ## Patterns
@@ -36,8 +36,8 @@ flowchart LR
 | Agent                 | Model  | Dimension                                    |
 | --------------------- | ------ | -------------------------------------------- |
 | Technical Impact      | Sonnet | Code changes, dependencies, breaking changes |
-| Organisational Impact | Haiku  | Team workflows, training, communication      |
-| Financial Impact      | Haiku  | Cost estimates, ROI projections              |
+| Organisational Impact | Sonnet | Team workflows, training, communication      |
+| Financial Impact      | Sonnet | Cost estimates, ROI projections              |
 | Risk Assessment       | Sonnet | Risk matrix, mitigation strategies           |
 
 **Implementation pattern in skills**:
@@ -53,11 +53,11 @@ Launch these agents in parallel with the Agent tool (one message, multiple tool 
 - **Task**: Analyse technical impact of {topic}
 - **Output format**: Markdown with severity ratings
 
-### Agent 2: Cost Analysis
+### Agent 2: Inventory
 
 - **Model**: haiku
-- **Task**: Estimate costs related to {topic}
-- **Output format**: Table with cost breakdown
+- **Task**: List the services, files and dependencies touched by {topic}
+- **Output format**: Table of items with `file:line` references
 
 ## Merge Strategy
 
@@ -167,7 +167,7 @@ flowchart LR
 
 | Model      | Cost   | Speed  | Best For                                           |
 | ---------- | ------ | ------ | -------------------------------------------------- |
-| **Haiku**  | Low    | Fast   | Counting, categorising, simple extraction, scoring |
+| **Haiku**  | Low    | Fast   | Counting, categorising, simple extraction          |
 | **Sonnet** | Medium | Medium | Analysis, synthesis, code review, writing          |
 | **Opus**   | High   | Slow   | Complex reasoning, architecture decisions          |
 
@@ -177,6 +177,19 @@ flowchart LR
 - **Sonnet** for agents that analyse/synthesise (e.g., "assess risk", "find patterns", "review code")
 - **Opus** only when you need deep reasoning about complex trade-offs
 - When in doubt, start with Sonnet — it handles most tasks well
+- Anything that estimates, scores or recommends (cost, risk, ROI, rubric scores) is judgement:
+  use Sonnet. A wrong estimate costs more than the tokens saved
+- The aliases `haiku`, `sonnet` and `opus` resolve to the current model generation (5.5), so
+  frontmatter does not need updating when a new version ships; `inherit` runs a subagent on the
+  main session's model
+
+### Sizing a Team
+
+Agent counts in a skill are an upper bound. Launch one agent per dimension that has real
+material behind it, in a single message so they run in parallel, and do the work inline when the
+scope is small - a three-file change does not need five agents. Each agent's prompt states what
+to return and in what shape, and asks for references (`file:line`) rather than pasted content, so
+the merge step stays small.
 
 ## Designing Agent Teams
 
@@ -271,8 +284,8 @@ Use sequential when:
 
 ### Keeping Costs Down
 
-- Use Haiku for 60-70% of agents in a team
-- Only promote to Sonnet when analysis quality noticeably suffers with Haiku
+- Use Haiku for the agents that only gather facts (scan, count, list, extract)
+- Keep judgement (estimates, scores, risk, recommendations) on Sonnet
 - Batch small items together instead of one agent per item
 - Use triage pattern to avoid deep analysis on irrelevant items
 
@@ -293,11 +306,11 @@ Alternatively, copy an existing skill directory from `.claude/skills/<name>/SKIL
 
 | Skill                  | Agents | Models            |
 | ---------------------- | ------ | ----------------- |
-| `/impact-analysis`     | 4      | 2 Sonnet, 2 Haiku |
-| `/scenario-compare`    | 3      | 2 Sonnet, 1 Haiku |
-| `/nfr-review`          | 3      | 2 Sonnet, 1 Haiku |
-| `/architecture-report` | 5      | 2 Sonnet, 3 Haiku |
-| `/cost-analysis`       | 3      | 1 Sonnet, 2 Haiku |
+| `/impact-analysis`     | 4      | 4 Sonnet          |
+| `/scenario-compare`    | 3      | 3 Sonnet          |
+| `/nfr-review`          | 3      | 3 Sonnet          |
+| `/architecture-report` | 5      | 4 Sonnet, 1 Haiku |
+| `/cost-analysis`       | 3      | 3 Sonnet          |
 | `/code-quality-report` | 5      | 1 Sonnet, 4 Haiku |
 | `/broken-references`   | 3      | 1 Sonnet, 2 Haiku |
 | `/dead-code-finder`    | 4      | 2 Sonnet, 2 Haiku |
@@ -305,8 +318,8 @@ Alternatively, copy an existing skill directory from `.claude/skills/<name>/SKIL
 | `/project-report`      | 4      | 2 Sonnet, 2 Haiku |
 | `/meeting-notes`       | 3      | 1 Sonnet, 2 Haiku |
 | `/diagram-review`      | 4      | 4 Sonnet          |
-| `/score-document`      | 4      | 4 Haiku           |
-| `/research-notes`      | 3      | 1 Sonnet, 2 Haiku |
+| `/score-document`      | 4      | 4 Sonnet          |
+| `/research-notes`      | 3      | 2 Sonnet, 1 Haiku |
 
 ### Batch Processing (3 skills)
 

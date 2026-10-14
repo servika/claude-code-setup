@@ -1,6 +1,6 @@
 ---
 name: auto-categorize
-description: Auto-categorise source files by architectural layer and purpose
+description: Auto-categorise source files by architectural layer and purpose. Use when mapping an unfamiliar codebase or checking that files sit in the right layer.
 model: haiku
 ---
 

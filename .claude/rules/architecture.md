@@ -1,3 +1,11 @@
+---
+paths:
+  - "docs/architecture/**"
+  - "**/adr/**"
+  - "**/decisions/**"
+  - ".dependency-cruiser.*"
+---
+
 # Architecture Guidelines
 
 ## Architecture Documentation Principles

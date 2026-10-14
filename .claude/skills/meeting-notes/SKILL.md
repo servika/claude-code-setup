@@ -1,6 +1,6 @@
 ---
 name: meeting-notes
-description: Create structured meeting notes with parallel extraction of decisions, actions, and topics
+description: Create structured meeting notes with parallel extraction of decisions, actions, and topics. Use when the user provides a meeting transcript or rough notes.
 model: sonnet
 ---
 
@@ -40,7 +40,7 @@ Create structured meeting notes from raw notes or transcripts, using three paral
 
 ### Phase 2: Parallel Extraction (Agent Team)
 
-Launch 3 agents using the Task tool:
+Launch up to 3 agents in parallel with the Agent tool (one message, several calls; skip a dimension with nothing to analyse):
 
 **Agent 1: Decision Extractor** (Sonnet)
 Task: Find all decisions made during the meeting

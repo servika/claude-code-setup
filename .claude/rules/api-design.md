@@ -1,3 +1,13 @@
+---
+paths:
+  - "**/routes/**"
+  - "**/controllers/**"
+  - "**/schemas/**"
+  - "**/validators/**"
+  - "openapi.*"
+  - "scripts/generate-openapi.*"
+---
+
 # API Design Guidelines
 
 ## REST Principles

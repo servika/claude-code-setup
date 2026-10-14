@@ -1,3 +1,15 @@
+---
+paths:
+  - "**/auth/**"
+  - "**/*auth*"
+  - "**/middleware/**"
+  - "**/config/**"
+  - ".env.example"
+  - "**/*upload*"
+  - "**/*session*"
+  - "**/*token*"
+---
+
 # Security Best Practices
 
 Stack baseline: Node 24 LTS, TypeScript 7, Express 5.2, React 19.3 + MUI v9, PostgreSQL 18, Zod 4.6.

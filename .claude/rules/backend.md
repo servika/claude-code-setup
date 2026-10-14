@@ -1,3 +1,14 @@
+---
+paths:
+  - "src/**/*.ts"
+  - "src/**/*.js"
+  - "server/**"
+  - "**/routes/**"
+  - "**/controllers/**"
+  - "**/services/**"
+  - "**/middleware/**"
+---
+
 # Backend Development (Node 24 LTS + Express 5 + TypeScript)
 
 ## Baseline

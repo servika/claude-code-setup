@@ -1,3 +1,15 @@
+---
+paths:
+  - "**/*.test.*"
+  - "**/*.spec.*"
+  - "tests/**"
+  - "**/__tests__/**"
+  - "vitest.config.*"
+  - "playwright.config.*"
+  - "src/mocks/**"
+  - "src/test/**"
+---
+
 # Testing Guidelines
 
 ## Testing Philosophy

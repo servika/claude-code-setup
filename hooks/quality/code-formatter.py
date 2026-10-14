@@ -96,6 +96,15 @@ def formatter_available(cmd):
         return False
 
 
+def read_bytes(path):
+    """Returns the file's bytes, or None when it cannot be read."""
+    try:
+        with open(path, 'rb') as f:
+            return f.read()
+    except OSError:
+        return None
+
+
 def main():
     try:
         raw_input = sys.stdin.read()
@@ -118,6 +127,7 @@ def main():
     if not formatter:
         sys.exit(0)
 
+    before = read_bytes(file_path)
     try:
         result = subprocess.run(
             formatter + [file_path],
@@ -128,6 +138,11 @@ def main():
         if result.returncode != 0:
             # Non-blocking warning
             warn(f"Formatter warning for {os.path.basename(file_path)}: {result.stderr[:200]}")
+        if read_bytes(file_path) != before:
+            # Tell Claude the file on disk no longer matches what it wrote, so the
+            # next Edit is made against the formatted content rather than a stale copy.
+            warn(f"{os.path.basename(file_path)} was reformatted by {formatter[1] if formatter[0] == 'npx' else formatter[0]}; "
+                 "re-read it before editing it again.")
     except FileNotFoundError:
         # Formatter not installed, skip silently
         pass

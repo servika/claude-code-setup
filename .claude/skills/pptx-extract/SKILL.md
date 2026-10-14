@@ -1,6 +1,6 @@
 ---
 name: pptx-extract
-description: Convert PowerPoint presentations to structured Markdown
+description: Convert PowerPoint presentations to structured Markdown. Use when the user provides a .pptx to read, summarise, or reuse.
 model: sonnet
 ---
 

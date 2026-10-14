@@ -1,6 +1,6 @@
 ---
 name: project-report
-description: Generate project status reports with RAG indicators from repository data
+description: Generate project status reports with RAG indicators from repository data. Use for a status update, steering meeting, or stakeholder report.
 model: sonnet
 ---
 
@@ -39,7 +39,7 @@ Generate a comprehensive project status report using four parallel agents analys
 
 ### Phase 2: Parallel Analysis (Agent Team)
 
-Launch 4 agents using the Task tool:
+Launch up to 4 agents in parallel with the Agent tool (one message, several calls; skip a dimension with nothing to analyse):
 
 **Agent 1: Task & Progress Analyser** (Haiku)
 Task: Assess work completion and velocity
