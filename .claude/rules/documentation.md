@@ -1,3 +1,12 @@
+---
+paths:
+  - "docs/**"
+  - "README*"
+  - "CHANGELOG*"
+  - "CONTRIBUTING*"
+  - "**/runbooks/**"
+---
+
 # Documentation Standards
 
 ## Documentation Types

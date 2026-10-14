@@ -1,6 +1,6 @@
 ---
 name: adr
-description: Create Architecture Decision Records with structured context, rationale, and consequences
+description: Create Architecture Decision Records with structured context, rationale, and consequences. Use when a decision is hard to reverse or constrains future work - a database, framework, auth model, deployment topology, or cross-cutting library.
 model: sonnet
 ---
 

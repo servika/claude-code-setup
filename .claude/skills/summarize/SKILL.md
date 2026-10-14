@@ -1,6 +1,6 @@
 ---
 name: summarize
-description: Summarise any document or codebase area with configurable depth and audience
+description: Summarise any document or codebase area with configurable depth and audience. Use when the user asks for a summary of a file, folder, or document.
 model: sonnet
 ---
 

@@ -42,16 +42,6 @@
             "timeout": 10
           }
         ]
-      },
-      {
-        "matcher": "Grep",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "bash \"${CLAUDE_PROJECT_DIR}/hooks/ux/search-hint.sh\"",
-            "timeout": 5
-          }
-        ]
       }
     ],
     "PostToolUse": [
@@ -101,11 +91,15 @@
       "Bash(npm run build*)",
       "Bash(npm run e2e*)",
       "Bash(npm ci)",
-      "Bash(npm install*)",
+      "Bash(pnpm install --frozen-lockfile*)",
+      "Bash(pnpm run *)",
+      "Bash(pnpm test*)",
+      "Bash(pnpm exec *)",
+      "Bash(yarn install --immutable*)",
+      "Bash(yarn run *)",
+      "Bash(yarn test*)",
       "Bash(npm audit*)",
       "Bash(npm outdated*)",
-      "Bash(pnpm *)",
-      "Bash(yarn *)",
       "Bash(npx tsc --noEmit*)",
       "Bash(npx vitest*)",
       "Bash(npx playwright*)",
@@ -122,8 +116,6 @@
       "Bash(git log*)",
       "Bash(git show*)",
       "Bash(git branch*)",
-      "Bash(git add*)",
-      "Bash(git commit*)",
       "Bash(git checkout*)",
       "Bash(gh pr view*)",
       "Bash(gh pr list*)",
@@ -138,6 +130,11 @@
       "Bash(cat Dockerfile*)"
     ],
     "ask": [
+      "Bash(yarn add*)",
+      "Bash(pnpm add*)",
+      "Bash(npm install*)",
+      "Bash(git commit*)",
+      "Bash(git add*)",
       "Bash(git push*)",
       "Bash(gh pr create*)",
       "Bash(gh pr merge*)",

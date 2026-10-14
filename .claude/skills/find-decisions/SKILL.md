@@ -1,6 +1,6 @@
 ---
 name: find-decisions
-description: Extract and catalogue decisions from ADRs, PRs, commits, and documentation
+description: Extract and catalogue decisions from ADRs, PRs, commits, and documentation. Use when asked why something is the way it is, or to inventory past decisions.
 model: sonnet
 ---
 

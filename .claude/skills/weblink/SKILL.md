@@ -1,6 +1,6 @@
 ---
 name: weblink
-description: Capture web page content with AI-generated summary and structured reference
+description: Capture web page content with AI-generated summary and structured reference. Use when the user shares a web page to keep as a reference.
 model: haiku
 ---
 

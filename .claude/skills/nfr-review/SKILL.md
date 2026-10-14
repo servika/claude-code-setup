@@ -1,6 +1,6 @@
 ---
 name: nfr-review
-description: Review non-functional requirements for completeness, measurability, and feasibility
+description: Review non-functional requirements for completeness, measurability, and feasibility. Use when NFRs already exist and need checking before design or sign-off.
 model: sonnet
 ---
 
@@ -39,7 +39,7 @@ Review a set of non-functional requirements using three parallel agents to check
 
 ### Phase 2: Parallel Review (Agent Team)
 
-Launch 3 agents using the Task tool:
+Launch up to 3 agents in parallel with the Agent tool (one message, several calls; skip a dimension with nothing to analyse):
 
 **Agent 1: Completeness Reviewer** (Sonnet)
 Task: Check coverage and gaps
@@ -50,7 +50,7 @@ Task: Check coverage and gaps
 - Check for cross-cutting concerns (logging, monitoring, error handling)
 Return: Completeness score (0-100%) with gap list
 
-**Agent 2: Measurability Reviewer** (Haiku)
+**Agent 2: Measurability Reviewer** (Sonnet)
 Task: Check that NFRs are testable
 - Flag vague language ("fast", "secure", "scalable", "user-friendly")
 - Verify numeric thresholds exist (response time in ms, uptime in %, etc.)

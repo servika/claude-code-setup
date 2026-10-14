@@ -1,6 +1,6 @@
 ---
 name: sprint-summary
-description: Generate sprint/weekly summary reports from git history, PRs, and issues
+description: Generate sprint/weekly summary reports from git history, PRs, and issues. Use at the end of a sprint or week to summarise delivered work.
 model: sonnet
 ---
 
@@ -39,7 +39,7 @@ Generate a comprehensive sprint or weekly summary using five parallel agents to 
 
 ### Phase 2: Parallel Analysis (Agent Team)
 
-Launch 5 agents using the Task tool:
+Launch up to 5 agents in parallel with the Agent tool (one message, several calls; skip a dimension with nothing to analyse):
 
 **Agent 1: Commit Analyser** (Haiku)
 Task: Summarise development activity

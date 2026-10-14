@@ -1,8 +1,8 @@
 #!/bin/bash
 # Context Loader Hook for Claude Code
 #
-# Auto-loads relevant context files when skill commands are detected
-# in user prompts. Maps skill names to rule files for richer context.
+# Points skill commands at the path-scoped rule files they rely on, which
+# are not loaded until matching files are touched.
 #
 # Hook Type: UserPromptSubmit
 # Exit Codes:
@@ -30,37 +30,37 @@ CONTEXT=""
 
 case "$PROMPT" in
     */adr*|*/impact-analysis*|*/scenario-compare*|*/architecture-report*)
-        CONTEXT="Load architecture rules: .claude/rules/architecture.md, .claude/rules/api-design.md"
+        CONTEXT="Read these rule files before starting - they are path-scoped and may not be in context yet: .claude/rules/architecture.md, .claude/rules/api-design.md"
         ;;
     */nfr-capture*|*/nfr-review*)
-        CONTEXT="Load architecture and quality rules: .claude/rules/architecture.md, .claude/rules/quality-gates.md"
+        CONTEXT="Read these rule files before starting - they are path-scoped and may not be in context yet: .claude/rules/architecture.md, .claude/rules/quality-gates.md"
         ;;
     */diagram*|*/c4-diagram*|*/diagram-review*)
-        CONTEXT="Load diagram rules: .claude/rules/architecture.md, .claude/rules/no-ascii-diagrams.md"
+        CONTEXT="Read these rule files before starting - they are path-scoped and may not be in context yet: .claude/rules/architecture.md, .claude/rules/no-ascii-diagrams.md"
         ;;
     */code-quality*|*/broken-references*|*/dead-code*|*/dependency-checker*)
-        CONTEXT="Load quality rules: .claude/rules/quality-gates.md, .claude/rules/testing.md"
+        CONTEXT="Read these rule files before starting - they are path-scoped and may not be in context yet: .claude/rules/quality-gates.md, .claude/rules/testing.md"
         ;;
     */auto-document*)
-        CONTEXT="Load documentation rules: .claude/rules/documentation.md, .claude/rules/backend.md, .claude/rules/frontend.md"
+        CONTEXT="Read these rule files before starting - they are path-scoped and may not be in context yet: .claude/rules/documentation.md, .claude/rules/backend.md, .claude/rules/frontend.md"
         ;;
     */sprint-summary*|*/project-report*)
-        CONTEXT="Load reporting context: .claude/rules/quality-gates.md, .claude/rules/documentation.md"
+        CONTEXT="Read these rule files before starting - they are path-scoped and may not be in context yet: .claude/rules/quality-gates.md, .claude/rules/documentation.md"
         ;;
     */meeting-notes*|*/voice-meeting*|*/email-capture*)
-        CONTEXT="Load documentation rules: .claude/rules/documentation.md"
+        CONTEXT="Read these rule files before starting - they are path-scoped and may not be in context yet: .claude/rules/documentation.md"
         ;;
     */score-document*)
-        CONTEXT="Load architecture rules: .claude/rules/architecture.md, .claude/rules/code-review.md"
+        CONTEXT="Read these rule files before starting - they are path-scoped and may not be in context yet: .claude/rules/architecture.md, .claude/rules/code-review.md"
         ;;
     */cost-analysis*)
-        CONTEXT="Load devops rules: .claude/rules/devops.md, .claude/rules/architecture.md"
+        CONTEXT="Read these rule files before starting - they are path-scoped and may not be in context yet: .claude/rules/devops.md, .claude/rules/architecture.md"
         ;;
     */dependency-graph*|*/find-related*|*/auto-categorize*)
-        CONTEXT="Load structure rules: .claude/rules/architecture.md, .claude/rules/frontend.md, .claude/rules/backend.md"
+        CONTEXT="Read these rule files before starting - they are path-scoped and may not be in context yet: .claude/rules/architecture.md, .claude/rules/frontend.md, .claude/rules/backend.md"
         ;;
     */find-decisions*|*/timeline*)
-        CONTEXT="Load decision rules: .claude/rules/architecture.md, .claude/rules/documentation.md"
+        CONTEXT="Read these rule files before starting - they are path-scoped and may not be in context yet: .claude/rules/architecture.md, .claude/rules/documentation.md"
         ;;
     */skill-creator*)
         CONTEXT="Skills live in .claude/skills/<name>/SKILL.md with name, description and model frontmatter. See docs/agent-teams-guide.md for agent-team patterns."

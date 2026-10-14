@@ -1,6 +1,6 @@
 ---
 name: score-document
-description: Score documents against customisable rubrics using parallel assessment agents
+description: Score documents against customisable rubrics using parallel assessment agents. Use when a document (ADR, design doc, proposal) needs an objective quality assessment.
 model: sonnet
 ---
 
@@ -43,9 +43,9 @@ Score a document (ADR, RFC, design doc, PR description) against a customisable r
 
 ### Phase 2: Parallel Scoring (Agent Team)
 
-Launch 4 agents using the Task tool, one per rubric dimension:
+Launch up to 4 agents in parallel with the Agent tool (one message, several calls; skip a dimension with nothing to analyse), one per rubric dimension:
 
-**Scoring Agent** (Haiku, one per dimension)
+**Scoring Agent** (Sonnet, one per dimension)
 Task: Score the document on assigned dimension
 - Read the document
 - Apply scoring criteria (1-5 per sub-criterion)

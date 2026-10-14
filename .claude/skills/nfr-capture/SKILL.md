@@ -1,6 +1,6 @@
 ---
 name: nfr-capture
-description: Capture and structure non-functional requirements across ISO 25010 quality categories
+description: Capture and structure non-functional requirements across ISO 25010 quality categories. Use at the start of a project or feature when quality targets are implicit or missing.
 model: sonnet
 ---
 

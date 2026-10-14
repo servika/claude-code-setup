@@ -1,3 +1,13 @@
+---
+paths:
+  - "**/migrations/**"
+  - "**/*.sql"
+  - "**/db/**"
+  - "**/repositories/**"
+  - "drizzle.config.*"
+  - "prisma/**"
+---
+
 # Database Guidelines (PostgreSQL 18)
 
 ## Database Design Principles

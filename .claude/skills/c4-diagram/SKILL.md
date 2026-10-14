@@ -1,6 +1,6 @@
 ---
 name: c4-diagram
-description: Generate data-driven C4 architecture diagrams with Mermaid C4 syntax or flowchart fallback
+description: Generate data-driven C4 architecture diagrams with Mermaid C4 syntax or flowchart fallback. Use when the user asks for a context, container, or component view of a system.
 model: sonnet
 ---
 

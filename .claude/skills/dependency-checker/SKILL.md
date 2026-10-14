@@ -1,6 +1,6 @@
 ---
 name: dependency-checker
-description: Validate npm dependencies for vulnerabilities, outdated packages, and unused packages
+description: Validate npm dependencies for vulnerabilities, outdated packages, and unused packages. Use before a release, after adding dependencies, or when asked about vulnerable, outdated, or unused packages.
 model: sonnet
 ---
 

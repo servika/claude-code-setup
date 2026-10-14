@@ -1,7 +1,7 @@
 {
-  "name": "claude-configuration",
+  "name": "claude-code-setup",
   "version": "3.0.0",
-  "description": "Claude Code configuration for SDLC teams - 12 rule files, 37 skills, 11 subagents and 10 hooks for TypeScript, React 19 + MUI v9, Node 24 + Express 5 and PostgreSQL 18",
+  "description": "Claude Code configuration for SDLC teams - 12 rule files, 37 skills, 11 subagents and 9 hooks for TypeScript, React 19 + MUI v9, Node 24 + Express 5 and PostgreSQL 18",
   "keywords": [
     "claude",
     "claude-code",
@@ -37,12 +37,12 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/servika/claude-configuration.git"
+    "url": "https://github.com/servika/claude-code-setup.git"
   },
   "bugs": {
-    "url": "https://github.com/servika/claude-configuration/issues"
+    "url": "https://github.com/servika/claude-code-setup/issues"
   },
-  "homepage": "https://github.com/servika/claude-configuration#readme",
+  "homepage": "https://github.com/servika/claude-code-setup#readme",
   "scripts": {
     "test": "echo \"This is a configuration repository - no tests to run\" && exit 0"
   },

@@ -1,6 +1,6 @@
 ---
 name: exec-summary
-description: Generate executive summaries tailored to specific audiences with BLUF structure
+description: Generate executive summaries tailored to specific audiences with BLUF structure. Use when findings or a report must be condensed for leadership or another non-technical audience.
 model: sonnet
 ---
 

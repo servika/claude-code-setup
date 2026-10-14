@@ -1,6 +1,6 @@
 ---
 name: broken-references
-description: Find broken imports, missing files, dead exports, and stale references across the codebase
+description: Find broken imports, missing files, dead exports, and stale references across the codebase. Use after a rename, move, or deletion, or when imports and links may no longer resolve.
 model: sonnet
 ---
 
@@ -38,7 +38,7 @@ Scan the codebase for broken references using three parallel agents examining im
 
 ### Phase 2: Parallel Scanning (Agent Team)
 
-Launch 3 agents using the Task tool:
+Launch up to 3 agents in parallel with the Agent tool (one message, several calls; skip a dimension with nothing to analyse):
 
 **Agent 1: Import Scanner** (Sonnet)
 Task: Find broken import/require statements

@@ -1,3 +1,15 @@
+---
+paths:
+  - ".github/**"
+  - "**/Dockerfile*"
+  - "docker/**"
+  - "compose*.y*ml"
+  - "docker-compose*.y*ml"
+  - ".dockerignore"
+  - "scripts/**"
+  - "infra/**"
+---
+
 # DevOps Guidelines (GitHub Actions + Docker)
 
 ## CI/CD Philosophy

@@ -1,6 +1,6 @@
 ---
 name: architecture-report
-description: Generate comprehensive architecture governance reports across five analysis dimensions
+description: Generate comprehensive architecture governance reports across five analysis dimensions. Use for quarterly architecture reviews, audit preparation, or a health check before a major initiative.
 model: sonnet
 ---
 
@@ -40,7 +40,7 @@ Generate a full architecture governance report using five parallel agents to ana
 
 ### Phase 2: Parallel Analysis (Agent Team)
 
-Launch 5 agents using the Task tool:
+Launch up to 5 agents in parallel with the Agent tool (one message, several calls; skip a dimension with nothing to analyse):
 
 **Agent 1: System Inventory** (Haiku)
 Task: Catalogue all system components
@@ -58,7 +58,7 @@ Task: Map integration points and patterns
 - Document integration patterns (sync/async, event-driven, direct)
 Return: Integration map with coupling assessment
 
-**Agent 3: Decision Audit** (Haiku)
+**Agent 3: Decision Audit** (Sonnet)
 Task: Review architectural decisions
 - Find and catalogue all ADRs
 - Identify decisions that are pending or overdue for review
@@ -74,7 +74,7 @@ Task: Identify architectural risks
 - Operational risks (monitoring gaps, missing runbooks, manual processes)
 Return: Risk register with severity, likelihood, and mitigation suggestions
 
-**Agent 5: Financial Overview** (Haiku)
+**Agent 5: Financial Overview** (Sonnet)
 Task: Summarise cost profile
 - Infrastructure costs (hosting, databases, CDN, monitoring)
 - Third-party service costs (APIs, SaaS tools, licensing)

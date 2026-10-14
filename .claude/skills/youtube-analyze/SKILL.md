@@ -1,6 +1,6 @@
 ---
 name: youtube-analyze
-description: Analyse YouTube videos via transcripts with timestamped summaries and key takeaways
+description: Analyse YouTube videos via transcripts with timestamped summaries and key takeaways. Use when the user shares a YouTube link to analyse.
 model: sonnet
 ---
 

@@ -1,6 +1,6 @@
 ---
 name: code-quality-report
-description: Generate comprehensive code quality metrics across five analysis dimensions
+description: Generate comprehensive code quality metrics across five analysis dimensions. Use when the user wants a quality baseline, a trend over time, or evidence for prioritising refactoring.
 model: sonnet
 ---
 
@@ -39,7 +39,7 @@ Analyse codebase quality using five parallel agents examining complexity, test c
 
 ### Phase 2: Parallel Analysis (Agent Team)
 
-Launch 5 agents using the Task tool:
+Launch up to 5 agents in parallel with the Agent tool (one message, several calls; skip a dimension with nothing to analyse):
 
 **Agent 1: Complexity Analysis** (Haiku)
 Task: Measure code complexity

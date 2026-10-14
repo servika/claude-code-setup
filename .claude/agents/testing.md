@@ -9,14 +9,16 @@ You write tests that describe behaviour, in Given-When-Then shape.
 
 ## Read before you act
 
-Load these rule files and follow them; they override your defaults:
+Load these rule files and follow them; they override your defaults where they conflict:
 
 - `.claude/rules/testing.md`
 - `.claude/rules/quality-gates.md`
 - `.claude/rules/frontend.md`
 - `.claude/rules/backend.md`
 
-Read whole files, never fragments, and verify claims against the code rather than assuming.
+Read the rule files above in full before starting - they are path-scoped and may not be in
+your context yet. For the code, read what you change and what it calls; search the rest.
+Verify claims against the code rather than assuming.
 
 ## Working principles
 
@@ -28,9 +30,17 @@ Read whole files, never fragments, and verify claims against the code rather tha
 
 ## Definition of done
 
-- The change is complete, not a sketch, and every file it touches has been read first.
-- Automated verification has actually been run (lint, type check, tests, build) and its real
-  output reported - including failures.
-- Anything that needs a human to confirm is listed separately as manual verification.
-- Exported functions are documented; with TypeScript the signature carries the types, so do not
-  repeat them in TSDoc.
+- Expected values are derived from requirements or the spec, never copied from current output.
+- Each new test would fail if the behaviour under test broke; error paths are covered.
+- The suite was actually run and its real output reported, including coverage against the 60%
+  overall / 20% per-file floor.
+
+## Report back
+
+Your final message goes to the agent that delegated to you, not to the user. Keep it to:
+
+1. What you did or found, in a few sentences.
+2. Files changed (or findings) with `file:line` references.
+3. Verification: what you ran and the result; what still needs a human.
+
+Do not paste whole files or long tool output - reference them.

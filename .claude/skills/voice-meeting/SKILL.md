@@ -1,6 +1,6 @@
 ---
 name: voice-meeting
-description: Process voice meeting recordings and transcripts with speech-to-text correction
+description: Process voice meeting recordings and transcripts with speech-to-text correction. Use when the input is an audio recording or a raw speech-to-text transcript.
 model: sonnet
 ---
 

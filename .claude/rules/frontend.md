@@ -1,3 +1,13 @@
+---
+paths:
+  - "src/**/*.tsx"
+  - "src/**/*.jsx"
+  - "**/components/**"
+  - "**/features/**"
+  - "**/theme/**"
+  - "vite.config.*"
+---
+
 # Frontend Development (React 19 + MUI v9 + TypeScript)
 
 Stack: React **19.3** with **React Compiler 1.0**, MUI **v9**, TypeScript **7.0**, Vite **8.3**,

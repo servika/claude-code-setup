@@ -1,3 +1,11 @@
+---
+paths:
+  - ".github/pull_request_template.md"
+  - ".github/PULL_REQUEST_TEMPLATE*"
+  - "CODEOWNERS"
+  - ".github/CODEOWNERS"
+---
+
 # Code Review Guidelines
 
 Stack baseline: TypeScript 7, Node 24 LTS, Express 5.2, React 19.3 (React Compiler 1.0) + MUI v9,

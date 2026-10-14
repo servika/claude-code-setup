@@ -1,6 +1,6 @@
 ---
 name: find-related
-description: Discover related code, docs, and patterns using multiple search signals
+description: Discover related code, docs, and patterns using multiple search signals. Use before changing an area, to find the code, tests, and docs connected to it.
 model: sonnet
 ---
 

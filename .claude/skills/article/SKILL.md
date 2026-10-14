@@ -1,6 +1,6 @@
 ---
 name: article
-description: Quick-capture articles from URLs with summary and relevance scoring
+description: Quick-capture articles from URLs with summary and relevance scoring. Use when the user shares an article URL to save, triage, or summarise for later.
 model: haiku
 ---
 

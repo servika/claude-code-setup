@@ -1,6 +1,6 @@
 ---
 name: dependency-graph
-description: Visualise system dependencies showing upstream/downstream relationships with criticality colouring
+description: Visualise system dependencies showing upstream/downstream relationships with criticality colouring. Use when asked what depends on a service or module, or to assess blast radius.
 model: sonnet
 ---
 

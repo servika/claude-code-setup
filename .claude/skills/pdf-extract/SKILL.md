@@ -1,6 +1,6 @@
 ---
 name: pdf-extract
-description: Extract structured content from PDF documents preserving headings, tables, and formatting
+description: Extract structured content from PDF documents preserving headings, tables, and formatting. Use when the user provides a PDF to read, quote, or convert.
 model: sonnet
 ---
 

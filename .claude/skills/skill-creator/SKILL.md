@@ -1,6 +1,6 @@
 ---
 name: skill-creator
-description: Generate new Claude Code skill files following the standard template with agent team patterns
+description: Generate new Claude Code skill files following the standard template with agent team patterns. Use when a repeated workflow should become a new slash command.
 model: sonnet
 ---
 
@@ -84,7 +84,7 @@ The generated skill file follows this template:
 ```markdown
 ---
 name: [skill-name]
-description: [One-line description - this is what Claude reads when deciding to use the skill]
+description: [What it does in one sentence. Use when <trigger situations> - this is what Claude reads when deciding to use the skill]
 model: [haiku|sonnet]
 ---
 

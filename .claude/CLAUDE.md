@@ -96,24 +96,27 @@ Before taking action, classify the request:
 
 For non-trivial tasks, gather context first:
 
-1. **Read files completely** - never truncate or partially read files
+1. **Read enough to understand** - read the code you change and what it calls in full; for large
+   files, logs and lockfiles, search first and read the relevant ranges
 2. **Verify assumptions** - investigate code rather than accepting claims at face value
 3. **Reference specifically** - present findings with `file:line` references
 4. **Identify unknowns** - note what research couldn't answer before proposing solutions
 
 ### Be Skeptical
 
-- Question vague or ambiguous requirements before implementing
 - Identify potential issues, edge cases, and conflicts early
-- If user corrections contradict code evidence, verify through investigation
-- No open questions should remain when finalizing plans
+- If user corrections contradict code evidence, verify through investigation and say what you
+  found
+- Ask only about decisions the request, the code and sensible defaults cannot settle. Otherwise
+  pick the conventional option, state it, and proceed
 
 ### Phase-Based Planning
 
-For complex tasks (Full Stack, multi-file changes):
+For large tasks (Full Stack, many files, hard-to-reverse changes):
 
 1. **Propose phases** - break work into logical phases with clear accomplishments
-2. **Seek approval** - get user buy-in on approach before detailed implementation
+2. **Confirm direction when it matters** - get buy-in before schema changes, public API changes,
+   or a large refactor; small and clearly-scoped work goes ahead without a checkpoint
 3. **Define success** - each phase needs explicit completion criteria
 
 ### Verification Separation
@@ -213,23 +216,23 @@ SHA-pinned actions, least-privilege `permissions:` per job, OIDC instead of long
 
 ## Hard Constraints
 
-Never do these:
+Each rule carries its reason, so apply the reason to cases the list does not name.
 
-- Ship exported functions with no documentation comment
-- Skip test coverage requirements
-- Use inline styles instead of the MUI `sx` prop
-- Store secrets in frontend code, images, logs, or version control
-- Skip input validation on APIs
-- Create routes without error handling
-- Use `console.log` in production (use the structured logger)
-- Commit without user request
-- Propose changes to code you haven't read
-- Truncate or partially read files when understanding context
-- Accept user claims without code verification when they conflict with evidence
-- Use string concatenation in SQL queries (SQL injection risk)
-- Deploy without passing quality gates
-- Reference a GitHub Action by a mutable tag in CI
-- Add a dependency without justifying it in the PR description
+| Do not                                                  | Because                                                                  |
+| ------------------------------------------------------- | ------------------------------------------------------------------------ |
+| Commit or push without the user asking                  | The user owns the history; an unrequested commit is hard to take back    |
+| Propose changes to code you haven't read                | Plausible-but-wrong edits are the most expensive kind to review          |
+| Store secrets in frontend code, images, logs or VCS     | Anything that reaches those places is effectively public and must rotate |
+| Build SQL by string concatenation                       | SQL injection; parameterize values, allowlist identifiers                |
+| Skip input validation at an API boundary                | Every downstream layer trusts the parsed shape                           |
+| Create routes without error handling                    | Unhandled paths fail open or leak internals (OWASP A10)                  |
+| Use `console.log` in production code                    | It bypasses redaction, levels and trace correlation in `pino`            |
+| Use inline `style` instead of the MUI `sx` prop         | Inline styles ignore the theme, dark mode and breakpoints                |
+| Ship exported functions without a doc comment           | Intent is not recoverable from the signature                             |
+| Skip the coverage floor (60% overall, 20% per file)     | One untested file can hide behind a good global number                   |
+| Reference a GitHub Action by a mutable tag              | Tags can be repointed at malicious commits (CVE-2025-30066)              |
+| Add a dependency without justifying it in the PR        | Every dependency is supply-chain surface (OWASP A03)                     |
+| Deploy without passing quality gates                    | The gates are the only evidence the build is releasable                  |
 
 ## Communication Style
 
@@ -241,7 +244,11 @@ Never do these:
 
 ## Related Rules
 
-See `.claude/rules/` for detailed guidelines:
+Rule files in `.claude/rules/` are path-scoped: each declares `paths:` in its frontmatter and
+loads only when you work on matching files (for example `database.md` for `**/migrations/**`).
+`no-ascii-diagrams.md` has no `paths:` and always applies. When a task needs a rule whose files
+you have not touched yet - designing an API before any route exists, reviewing a PR, writing an
+ADR - read that rule file explicitly. Subagents list the rule files they load.
 
 ### Development
 
@@ -294,6 +301,9 @@ fan out to parallel agents for analysis.
 `/voice-meeting`, `/email-capture`, `/summarize`, `/find-related`, `/find-decisions`,
 `/timeline`, `/skill-creator`
 
+Agent counts in a skill are an upper bound, not a quota. Launch one agent per independent
+dimension that has real material behind it; when the scope is small, do the work inline.
+
 ## Hooks
 
 Hooks in `hooks/`, wired in `.claude/settings.json`, provide automated guardrails:
@@ -306,7 +316,6 @@ Hooks in `hooks/`, wired in `.claude/settings.json`, provide automated guardrail
 | `quality/code-formatter.py`       | PostToolUse      | Auto-format edited files           |
 | `quality/import-checker.py`       | PostToolUse      | Validate import paths exist        |
 | `quality/naming-convention.py`    | PostToolUse      | Enforce file naming conventions    |
-| `ux/context-loader.sh`            | UserPromptSubmit | Auto-load skill context            |
-| `ux/search-hint.sh`               | PreToolUse       | Suggest faster search methods      |
+| `ux/context-loader.sh`            | UserPromptSubmit | Point skills at the rules they use |
 | `safety/bash-safety.py`           | PreToolUse       | Auto-allow safe read commands      |
 | `notification/desktop-notify.sh`  | Stop             | Desktop notification on completion |

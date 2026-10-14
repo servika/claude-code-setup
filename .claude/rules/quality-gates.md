@@ -1,3 +1,14 @@
+---
+paths:
+  - ".github/workflows/**"
+  - "vitest.config.*"
+  - "playwright.config.*"
+  - "lighthouserc.*"
+  - "eslint.config.*"
+  - "biome.json*"
+  - "tests/load/**"
+---
+
 # Quality Gates & QA Processes
 
 ## Quality Gate Philosophy

@@ -18,8 +18,12 @@ if [ -n "$INPUT" ]; then
 import json, sys
 try:
     data = json.load(sys.stdin)
-    msg = data.get('message', data.get('stopReason', 'Task completed'))
-    print(msg[:100])
+    # Stop hook input carries no summary field on older Claude Code versions;
+    # last_assistant_message is used when present, otherwise the default stands.
+    msg = data.get('last_assistant_message') or 'Task completed'
+    msg = ' '.join(str(msg).split())[:100]
+    # Strip characters that would break the AppleScript string literal.
+    print(msg.replace(chr(92), '').replace(chr(34), chr(39)))
 except:
     print('Task completed')
 " 2>/dev/null)

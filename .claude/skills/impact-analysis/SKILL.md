@@ -1,6 +1,6 @@
 ---
 name: impact-analysis
-description: Analyse cascading impact of architectural changes across technical, organisational, financial, and risk dimensions
+description: Analyse cascading impact of architectural changes across technical, organisational, financial, and risk dimensions. Use before a migration, major upgrade, or architectural change to judge whether and how to proceed.
 model: sonnet
 ---
 
@@ -40,7 +40,7 @@ Analyse the ripple effects of a proposed architectural change using four paralle
 
 ### Phase 2: Parallel Impact Analysis (Agent Team)
 
-Launch 4 agents using the Task tool:
+Launch up to 4 agents in parallel with the Agent tool (one message, several calls; skip a dimension with nothing to analyse):
 
 **Agent 1: Technical Impact** (Sonnet)
 Task: Analyse technical consequences of the change
@@ -51,7 +51,7 @@ Task: Analyse technical consequences of the change
 - Map upstream and downstream dependency changes
 Return: Structured list of technical impacts with severity (Critical/High/Medium/Low)
 
-**Agent 2: Organisational Impact** (Haiku)
+**Agent 2: Organisational Impact** (Sonnet)
 Task: Assess team and process implications
 - Identify teams that need to be involved or informed
 - Assess skill gaps or training needs
@@ -59,7 +59,7 @@ Task: Assess team and process implications
 - Estimate communication overhead and coordination needs
 Return: Structured list of organisational impacts with effort estimates
 
-**Agent 3: Financial Impact** (Haiku)
+**Agent 3: Financial Impact** (Sonnet)
 Task: Estimate cost implications
 - Development effort (person-days) for implementation
 - Infrastructure cost changes (compute, storage, licensing)

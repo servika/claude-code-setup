@@ -1,6 +1,6 @@
 ---
 name: email-capture
-description: Capture email content into structured notes with action item extraction
+description: Capture email content into structured notes with action item extraction. Use when the user pastes or forwards an email to turn into notes and action items.
 model: haiku
 ---
 

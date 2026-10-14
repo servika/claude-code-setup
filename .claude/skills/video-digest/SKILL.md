@@ -1,6 +1,6 @@
 ---
 name: video-digest
-description: Batch-triage multiple videos by relevance then deeply analyse must-watch ones
+description: Batch-triage multiple videos by relevance then deeply analyse must-watch ones. Use when the user has several videos and needs to know which are worth watching.
 model: sonnet
 ---
 
@@ -33,7 +33,7 @@ Efficiently process a list of videos by first triaging all for relevance (using 
 
 ### Phase 1: Triage (Parallel Haiku Agents)
 
-For each video, spawn a Haiku agent using the Task tool:
+For each video, spawn a Haiku agent with the Agent tool:
 
 **Triage Agent** (Haiku, one per video)
 Task: Score this video's relevance to the topic
